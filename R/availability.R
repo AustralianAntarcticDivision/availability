@@ -177,9 +177,8 @@ surrogate_arsimulate=function(arfit,n,startlonlat,do.test.land=TRUE,random.rotat
 
 
 angle.normalise=function(x) {
-    x=(2*pi)*((x/2/pi) %% 1) ## to range 0-(2*pi)
-    x[x>pi]=x[x>pi]-2*pi
-    x
+    ## normalize angle to range [-pi,pi)
+    (x+pi)%%(2*pi)-pi
 }
 
 
