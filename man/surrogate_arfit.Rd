@@ -4,12 +4,12 @@
 \alias{surrogate_arfit}
 \title{Fit vector-autoregressive model to track}
 \usage{
-surrogate_arfit(lonlat, order = 1)
+surrogate_arfit(lonlat, model.order = 1)
 }
 \arguments{
 \item{lonlat}{array: 2-column matrix or data.frame with longitude, latitude of each point}
 
-\item{order}{numeric: the order of the AR model to fit, default=1}
+\item{model.order}{numeric: the order of the AR model to fit, default=1}
 }
 \value{
 object of class "ar"
@@ -21,6 +21,6 @@ Fit vector-autoregressive model to track
 Ben Raymond
 }
 \seealso{
-\code{\link{ar}}
+\code{\link{ar}} \code{\link{surrogate_arsimulate}}
 }
 

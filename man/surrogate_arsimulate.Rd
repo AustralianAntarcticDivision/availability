@@ -4,8 +4,8 @@
 \alias{surrogate_arsimulate}
 \title{Simulate track from fitted vector autoregressive model}
 \usage{
-surrogate_arsimulate(arfit, n, startlonlat, do.test.land = TRUE,
-  random.rotation = c(-pi, pi))
+surrogate_arsimulate(arfit, n, startlonlat, endlonlat = NULL,
+  do.test.land = TRUE, random.rotation = c(-pi, pi))
 }
 \arguments{
 \item{arfit}{: fitted object of class "ar" as returned by \code{\link{surrogate_arfit}}}
@@ -13,6 +13,8 @@ surrogate_arsimulate(arfit, n, startlonlat, do.test.land = TRUE,
 \item{n}{numeric: number of points to simulate}
 
 \item{startlonlat}{numeric: 2-element array with starting longitude and latitude}
+
+\item{endlonlat}{numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if do.test.land is TRUE)}
 
 \item{do.test.land}{logical: use the included land mask to avoid land?}
 
