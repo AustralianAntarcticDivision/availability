@@ -26,12 +26,11 @@ randomize_track=function(lonlat,rotate=c(-pi,pi)) {
 }
 
 
-#' Fit vector-autoregressive model to track
+#' Fit first-order vector-autoregressive model to track
 #'
 #' @author Ben Raymond
 #'
 #' @param lonlat array: 2-column matrix or data.frame with longitude, latitude of each point
-#' @param model.order numeric: the order of the AR model to fit, default=1
 #'
 #' @return object of class "ar"
 #'
@@ -39,8 +38,11 @@ randomize_track=function(lonlat,rotate=c(-pi,pi)) {
 #'
 #' @export surrogate_arfit
 
-surrogate_arfit=function(lonlat,model.order=1) {
+# @param model.order numeric: the order of the AR model to fit, default=1
+
+surrogate_arfit=function(lonlat) {
     ## calculate dx, dy separately at each time step
+    model.order=1 ## fixed at 1st order model for now. Might allow this as a param, but needs surrogate_arsimulate code updated to handle higher model orders first
     nr=nrow(lonlat)
     dx=distVincentyEllipsoid(lonlat[1:(nr-1),],cbind(lonlat[-1,1],lonlat[1:(nr-1),2]))*sign(lonlat[1:(nr-1),1]-lonlat[-1,1])
     dy=distVincentyEllipsoid(lonlat[1:(nr-1),],cbind(lonlat[1:(nr-1),1],lonlat[-1,2]))*sign(lonlat[1:(nr-1),2]-lonlat[-1,2])
@@ -57,9 +59,9 @@ surrogate_arfit=function(lonlat,model.order=1) {
 #' @param arfit : fitted object of class "ar" as returned by \code{\link{surrogate_arfit}}
 #' @param n numeric: number of points to simulate
 #' @param startlonlat numeric: 2-element array with starting longitude and latitude
-#' @param endlonlat numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if do.test.land is TRUE)
+#' @param endlonlat numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if \code{do.test.land} is TRUE)
 #' @param do.test.land logical: use the included land mask to avoid land?
-#' @param random.rotation numeric: 2-element array giving the range of the rotation to apply to the randomized track (values in radians). use random.rotation=NULL for no such rotation. The angle can be restricted using random.rotation=c(min.angle,max.angle) - this may speed up computation by avoiding impossible angles (e.g. tracks over a land mass)
+#' @param random.rotation numeric: 2-element array giving the range of the rotation to apply to the randomized track (values in radians). use \code{random.rotation=NULL} for no such rotation. The angle can be restricted using \code{random.rotation=c(min.angle,max.angle)} - this may speed up computation by avoiding impossible angles (e.g. tracks over a land mass)
 #'
 #' @return 2-column data.frame with longitude,latitude of simulated track points
 #'
@@ -68,11 +70,6 @@ surrogate_arfit=function(lonlat,model.order=1) {
 #' @export surrogate_arsimulate
 
 surrogate_arsimulate=function(arfit,n,startlonlat,endlonlat=NULL,do.test.land=TRUE,random.rotation=c(-pi,pi)) {
-    ## random.rotation=c(-pi,pi) will apply random rotation to parms before simulating
-    ## use random.rotation=NULL for no such rotation
-    ## angle can be restricted using random.rotation=c(min.angle,max.angle) - this may speed up
-    ## computation by avoiding impossible angles (e.g. tracks over the continent)
-
     if (!is.null(endlonlat)) {
         endlonlat=as.numeric(endlonlat)
     }
@@ -100,7 +97,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,endlonlat=NULL,do.test.land=TR
         land.lon=seq(from=-180,to=180,length.out=dim(land.mask)[2])
         land.lat=seq(from=0,to=-90,length.out=dim(land.mask)[1])
     }
-    A=matrix(arfit$ar,nrow=2) ## fill down columns
+    A=matrix(arfit$ar,ncol=2,byrow=FALSE)
     fitted.var=as.matrix(arfit$var.pred)
     fitted.mean=matrix(arfit$x.mean,nrow=1)
     tempchol=chol(fitted.var) ## calculate chol decomposition once
@@ -113,6 +110,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,endlonlat=NULL,do.test.land=TR
         xsim[1,]=t(A %*% t(xsim[1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
 #        stop()
     }
+
     simtrack=matrix(0,n,2)
     simtrack[1,]=as.numeric(startlonlat)
     for (k in 2:n) {
