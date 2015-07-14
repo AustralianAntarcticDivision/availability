@@ -2,10 +2,10 @@
 #'
 #' Assumes that steps are equally spaced in time. Probably not a particular good way of doing it since it destroys the autocorrelation
 #' structure of the track.
-#' 
+#'
 #' @author Ben Raymond
 #'
-#' @param lonlat array: 2-column matrix or data.frame with longitude, latitude of each point 
+#' @param lonlat array: 2-column matrix or data.frame with longitude, latitude of each point
 #' @param rotate array: 2-element numeric giving the lower and upper limits of the random rotation to apply to the randomized track
 #'
 #' @return 2-column data.frame with longitude,latitude of randomized track points
@@ -59,7 +59,8 @@ surrogate_arfit=function(lonlat) {
 #' @param arfit : fitted object of class "ar" as returned by \code{\link{surrogate_arfit}}
 #' @param n numeric: number of points to simulate
 #' @param startlonlat numeric: 2-element array with starting longitude and latitude
-#' @param endlonlat numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if \code{do.test.land} is TRUE)
+#' @param fixed data.frame or matrix: first column is the index (from 1:n) of each fixed point, and the second and third columns give the associated longitude and latitude
+#' @param endlonlat numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if \code{do.test.land} is TRUE). This is a simple way of imposing a return-to-starting-location constraint; for more complex constraints use the \code{fixed} argument
 #' @param do.test.land logical: use the included land mask to avoid land?
 #' @param random.rotation numeric: 2-element array giving the range of the rotation to apply to the randomized track (values in radians). use \code{random.rotation=NULL} for no such rotation. The angle can be restricted using \code{random.rotation=c(min.angle,max.angle)} - this may speed up computation by avoiding impossible angles (e.g. tracks over a land mass)
 #'
@@ -69,9 +70,9 @@ surrogate_arfit=function(lonlat) {
 #'
 #' @export surrogate_arsimulate
 
-surrogate_arsimulate=function(arfit,n,startlonlat,endlonlat=NULL,do.test.land=TRUE,random.rotation=c(-pi,pi)) {
-    if (!is.null(endlonlat)) {
-        endlonlat=as.numeric(endlonlat)
+surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.test.land=TRUE,random.rotation=c(-pi,pi)) {
+    if (!is.null(endlonlat) && !is.null(fixed)) {
+        stop("only one of fixed or endlonlat can be supplied")
     }
     if (! is.null(random.rotation)) {
         this.rotation=0
@@ -85,13 +86,27 @@ surrogate_arsimulate=function(arfit,n,startlonlat,endlonlat=NULL,do.test.land=TR
 #            print(matrix(arfit$x.mean,nrow=1))
             rotated.arfit$x.mean=matrix(arfit$x.mean,nrow=1) %*% t(Rm)
             ## call simulate on rotated parms
-            simtrack=surrogate_arsimulate(arfit=rotated.arfit,n=n,startlonlat=startlonlat,endlonlat=endlonlat,do.test.land=do.test.land,random.rotation=NULL)
+            simtrack=surrogate_arsimulate(arfit=rotated.arfit,n=n,startlonlat=startlonlat,fixed=fixed,endlonlat=endlonlat,do.test.land=do.test.land,random.rotation=NULL)
             if (dim(simtrack)[1]>0) {
                 break
             }
         }
         return(simtrack)
     }
+    if (!is.null(endlonlat)) {
+        endlonlat=as.numeric(endlonlat)
+        fixed=data.frame(index=n,lon=endlonlat[1],lat=endlonlat[2]) ## convert to "fixed" format
+    }
+    ## add starting point as a fixed point
+    if (is.null(fixed)) {
+        fixed=data.frame(index=1,lon=startlonlat[1],lat=startlonlat[2])
+    } else {
+        if (is.matrix(fixed)) {
+            fixed=data.frame(index=fixed[,1],lon=fixed[,2],lat=fixed[,3])
+        }
+        fixed=rbind(data.frame(index=1,lon=startlonlat[1],lat=startlonlat[2]),fixed)
+    }
+    fixed=fixed[order(fixed$index),] ## ensure ascending order by index
     if (do.test.land) {
         land.mask=readPNG(system.file("extdata","land_mask-0.1-nosub.png",package="availability")) ## 0=land, 1=ocean
         land.lon=seq(from=-180,to=180,length.out=dim(land.mask)[2])
@@ -113,6 +128,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,endlonlat=NULL,do.test.land=TR
 
     simtrack=matrix(0,n,2)
     simtrack[1,]=as.numeric(startlonlat)
+
     for (k in 2:n) {
         point.okay=TRUE
         for (land.tries in 1:10) {
@@ -124,10 +140,19 @@ surrogate_arsimulate=function(arfit,n,startlonlat,endlonlat=NULL,do.test.land=TR
             simtrack[k,1]=angle.normalise(simtrack[k,1]/180*pi)/pi*180 ## ensure is in range -180 to 180
             temp=destPoint(simtrack[k-1,],0,xsim[k,2]) # y step
             simtrack[k,2]=temp[2]
-            if (!is.null(endlonlat)) {
-                ## as we get closer to the end of our track, increasingly nudge the random point towards the designated ending location
-                a=diag(1/(n-k+1),2)
-                simtrack[k,]=simtrack[k,]+a%*%(endlonlat-simtrack[k,])
+            ##if (!is.null(endlonlat)) {
+            ##    ## as we get closer to the end of our track, increasingly nudge the random point towards the designated ending location
+            ##    a=diag(1/(n-k+1),2)
+            ##    simtrack[k,]=simtrack[k,]+a%*%(endlonlat-simtrack[k,])
+            ##}
+
+            ## as we get closer to the next fixed point, increasingly nudge the random point towards the designated fixed location
+            next_fixed=if (any(fixed$index>=k)) which.max(fixed$index>=k) else NA
+    #cat(next_fixed)
+            if (!is.na(next_fixed)) {
+                ## next_fixed is row index into fixed
+                a=diag(1/(fixed$index[next_fixed]-k+1),2)
+                simtrack[k,]=simtrack[k,]+a%*%(c(fixed$lon[next_fixed],fixed$lat[next_fixed])-simtrack[k,])
             }
             if (do.test.land) {
                 ## test if point over land
@@ -156,9 +181,9 @@ surrogate_arsimulate=function(arfit,n,startlonlat,endlonlat=NULL,do.test.land=TR
 #
 # @author Ben Raymond
 #
-# @param lonlat array: 2-column matrix or data.frame with longitude, latitude of each point 
+# @param lonlat array: 2-column matrix or data.frame with longitude, latitude of each point
 #
-# @return data.frame with dx and dy in metres                                        
+# @return data.frame with dx and dy in metres
 
 calc_dxdy=function(lonlat) {
     ## calculate dx, dy separately at each time step
@@ -172,7 +197,7 @@ calc_dxdy=function(lonlat) {
 #
 # @author Ben Raymond
 #
-# @param lonlat array: 2-column matrix or data.frame with longitude, latitude of each point 
+# @param lonlat array: 2-column matrix or data.frame with longitude, latitude of each point
 #
 # @return data.frame with distance in metres and bearing in degrees
 
