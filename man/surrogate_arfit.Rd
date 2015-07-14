@@ -2,20 +2,18 @@
 % Please edit documentation in R/availability.R
 \name{surrogate_arfit}
 \alias{surrogate_arfit}
-\title{Fit vector-autoregressive model to track}
+\title{Fit first-order vector-autoregressive model to track}
 \usage{
-surrogate_arfit(lonlat, model.order = 1)
+surrogate_arfit(lonlat)
 }
 \arguments{
 \item{lonlat}{array: 2-column matrix or data.frame with longitude, latitude of each point}
-
-\item{model.order}{numeric: the order of the AR model to fit, default=1}
 }
 \value{
 object of class "ar"
 }
 \description{
-Fit vector-autoregressive model to track
+Fit first-order vector-autoregressive model to track
 }
 \author{
 Ben Raymond

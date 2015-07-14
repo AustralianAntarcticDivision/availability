@@ -4,7 +4,7 @@
 \alias{surrogate_arsimulate}
 \title{Simulate track from fitted vector autoregressive model}
 \usage{
-surrogate_arsimulate(arfit, n, startlonlat, endlonlat = NULL,
+surrogate_arsimulate(arfit, n, startlonlat, fixed = NULL, endlonlat = NULL,
   do.test.land = TRUE, random.rotation = c(-pi, pi))
 }
 \arguments{
@@ -14,11 +14,13 @@ surrogate_arsimulate(arfit, n, startlonlat, endlonlat = NULL,
 
 \item{startlonlat}{numeric: 2-element array with starting longitude and latitude}
 
-\item{endlonlat}{numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if do.test.land is TRUE)}
+\item{fixed}{data.frame or matrix: first column is the index (from 1:n) of each fixed point, and the second and third columns give the associated longitude and latitude}
+
+\item{endlonlat}{numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if \code{do.test.land} is TRUE). This is a simple way of imposing a return-to-starting-location constraint; for more complex constraints use the \code{fixed} argument}
 
 \item{do.test.land}{logical: use the included land mask to avoid land?}
 
-\item{random.rotation}{numeric: 2-element array giving the range of the rotation to apply to the randomized track (values in radians). use random.rotation=NULL for no such rotation. The angle can be restricted using random.rotation=c(min.angle,max.angle) - this may speed up computation by avoiding impossible angles (e.g. tracks over a land mass)}
+\item{random.rotation}{numeric: 2-element array giving the range of the rotation to apply to the randomized track (values in radians). use \code{random.rotation=NULL} for no such rotation. The angle can be restricted using \code{random.rotation=c(min.angle,max.angle)} - this may speed up computation by avoiding impossible angles (e.g. tracks over a land mass)}
 }
 \value{
 2-column data.frame with longitude,latitude of simulated track points
