@@ -5,7 +5,7 @@
 \title{Simulate track from fitted vector autoregressive model}
 \usage{
 surrogate_arsimulate(arfit, n, startlonlat, fixed = NULL, endlonlat = NULL,
-  do.test.land = TRUE, random.rotation = c(-pi, pi))
+  do.test.land = TRUE, random.rotation = c(-pi, pi), verbose = FALSE)
 }
 \arguments{
 \item{arfit}{: fitted object of class "ar" as returned by \code{\link{surrogate_arfit}}}
@@ -18,15 +18,17 @@ surrogate_arsimulate(arfit, n, startlonlat, fixed = NULL, endlonlat = NULL,
 
 \item{endlonlat}{numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if \code{do.test.land} is TRUE). This is a simple way of imposing a return-to-starting-location constraint; for more complex constraints use the \code{fixed} argument}
 
-\item{do.test.land}{logical: use the included land mask to avoid land?}
+\item{do.test.land}{logical: use the included land mask to avoid land? Note that land masking is ignored for fixed points. Note also that it is possible to create a sitation where tracks are difficult or impossible to simulate, because a fixed point is sufficiently far onto land that the track cannot reach it.}
 
 \item{random.rotation}{numeric: 2-element array giving the range of the rotation to apply to the randomized track (values in radians). use \code{random.rotation=NULL} for no such rotation. The angle can be restricted using \code{random.rotation=c(min.angle,max.angle)} - this may speed up computation by avoiding impossible angles (e.g. tracks over a land mass)}
+
+\item{verbose}{logical: if TRUE, spit out extra information which may be helpful if things don't work as expected}
 }
 \value{
 2-column data.frame with longitude,latitude of simulated track points
 }
 \description{
-Simulate track from fitted vector autoregressive model
+Note that land masking uses a built-in land mask image, and it only covers the southern hemisphere. A future version will do something about this.
 }
 \author{
 Ben Raymond

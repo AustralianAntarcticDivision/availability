@@ -54,6 +54,8 @@ surrogate_arfit=function(lonlat) {
 
 #' Simulate track from fitted vector autoregressive model
 #'
+#' Note that land masking uses a built-in land mask image, and it only covers the southern hemisphere. A future version will do something about this.
+#'
 #' @author Ben Raymond
 #'
 #' @param arfit : fitted object of class "ar" as returned by \code{\link{surrogate_arfit}}
@@ -61,8 +63,9 @@ surrogate_arfit=function(lonlat) {
 #' @param startlonlat numeric: 2-element array with starting longitude and latitude
 #' @param fixed data.frame or matrix: first column is the index (from 1:n) of each fixed point, and the second and third columns give the associated longitude and latitude
 #' @param endlonlat numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if \code{do.test.land} is TRUE). This is a simple way of imposing a return-to-starting-location constraint; for more complex constraints use the \code{fixed} argument
-#' @param do.test.land logical: use the included land mask to avoid land?
+#' @param do.test.land logical: use the included land mask to avoid land? Note that land masking is ignored for fixed points. Note also that it is possible to create a sitation where tracks are difficult or impossible to simulate, because a fixed point is sufficiently far onto land that the track cannot reach it.
 #' @param random.rotation numeric: 2-element array giving the range of the rotation to apply to the randomized track (values in radians). use \code{random.rotation=NULL} for no such rotation. The angle can be restricted using \code{random.rotation=c(min.angle,max.angle)} - this may speed up computation by avoiding impossible angles (e.g. tracks over a land mass)
+#' @param verbose logical: if TRUE, spit out extra information which may be helpful if things don't work as expected
 #'
 #' @return 2-column data.frame with longitude,latitude of simulated track points
 #'
@@ -70,7 +73,7 @@ surrogate_arfit=function(lonlat) {
 #'
 #' @export surrogate_arsimulate
 
-surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.test.land=TRUE,random.rotation=c(-pi,pi)) {
+surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.test.land=TRUE,random.rotation=c(-pi,pi),verbose=FALSE) {
     if (!is.null(endlonlat) && !is.null(fixed)) {
         stop("only one of fixed or endlonlat can be supplied")
     }
@@ -86,7 +89,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
 #            print(matrix(arfit$x.mean,nrow=1))
             rotated.arfit$x.mean=matrix(arfit$x.mean,nrow=1) %*% t(Rm)
             ## call simulate on rotated parms
-            simtrack=surrogate_arsimulate(arfit=rotated.arfit,n=n,startlonlat=startlonlat,fixed=fixed,endlonlat=endlonlat,do.test.land=do.test.land,random.rotation=NULL)
+            simtrack=surrogate_arsimulate(arfit=rotated.arfit,n=n,startlonlat=startlonlat,fixed=fixed,endlonlat=endlonlat,do.test.land=do.test.land,random.rotation=NULL,verbose=verbose)
             if (dim(simtrack)[1]>0) {
                 break
             }
@@ -128,9 +131,9 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
 
     simtrack=matrix(0,n,2)
     simtrack[1,]=as.numeric(startlonlat)
-
     for (k in 2:n) {
         point.okay=TRUE
+        if (verbose) cat(sprintf("Step %d, current location is %.3f, %.3f\n",k,simtrack[k-1,1],simtrack[k-1,2]))
         for (land.tries in 1:10) {
             thisrand=matrix(rnorm(2) %*% tempchol,nrow=1)
             xsim[k,]=t(A %*% t(xsim[k-1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
@@ -148,24 +151,35 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
 
             ## as we get closer to the next fixed point, increasingly nudge the random point towards the designated fixed location
             next_fixed=if (any(fixed$index>=k)) which.max(fixed$index>=k) else NA
-    #cat(next_fixed)
+            ##    cat(sprintf("%d: next_fixed=%d (%d) [diff=%.3f]\n",k,next_fixed,fixed$index[next_fixed],1/(fixed$index[next_fixed]-k+1)))
+            if (verbose) cat(sprintf("  proposed point %d is at %.3f, %.3f\n",k,simtrack[k,1],simtrack[k,2]))
             if (!is.na(next_fixed)) {
+                if (verbose) cat(sprintf("    the next fixed point is at %.3f, %.3f in %d steps time\n",fixed$lon[next_fixed],fixed$lat[next_fixed],fixed$index[next_fixed]-k))
                 ## next_fixed is row index into fixed
                 a=diag(1/(fixed$index[next_fixed]-k+1),2)
                 simtrack[k,]=simtrack[k,]+a%*%(c(fixed$lon[next_fixed],fixed$lat[next_fixed])-simtrack[k,])
+                if (verbose) cat(sprintf("    the proposed point has been nudged to %.3f, %.3f because of the next fixed point\n",simtrack[k,1],simtrack[k,2]))
             }
             if (do.test.land) {
-                ## test if point over land
-                lonidx=which.min(abs(land.lon-simtrack[k,1]))
-                latidx=which.min(abs(land.lat-simtrack[k,2]))
-                point.okay=land.mask[latidx,lonidx]==1
+                if (fixed$index[next_fixed]!=k) {
+                    ## test if point over land, but not if this is a fixed point
+                    lonidx=which.min(abs(land.lon-simtrack[k,1]))
+                    latidx=which.min(abs(land.lat-simtrack[k,2]))
+                    point.okay=land.mask[latidx,lonidx]==1
+                } else {
+                    if (verbose) cat("    not checking land-mask for this point, because it is a fixed point.\n")
+                }
             }
             if (point.okay) {
+                if (verbose & do.test.land) cat(sprintf("    this proposed point does not lie on land, accepting\n"))
                 break
+            } else {
+                if (verbose) cat(sprintf("    this proposed point lies on land\n"))
             }
         }
         if (! point.okay) {
             ## could not find a valid point at this step: give up
+            if (verbose) cat(sprintf("  could not find valid point, abandoning this track and starting again\n"))
             simtrack=NULL
             break
         }
