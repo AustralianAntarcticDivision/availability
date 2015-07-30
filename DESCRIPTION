@@ -8,9 +8,9 @@ Maintainer: Ben Raymond <ben.raymond@aad.gov.au>
 Description: Estimating geographic space available to animals based on
     telemetry data
 Imports:
+    assertthat,
     geosphere,
     png
 Suggests:
 License: MPL-2
 LazyLoad: yes
-VignetteBuilder: R.rsp
