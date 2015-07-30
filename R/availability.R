@@ -195,7 +195,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
     if (return.all.points) {
         data.frame(lon=simtrack[,1],lat=simtrack[,2],valid=simtrack[,3])
     } else {
-        data.frame(lon=simtrack[simtrack[,3],1],lat=simtrack[simtrack[,3],2])
+        data.frame(lon=simtrack[simtrack[,3]>0,1],lat=simtrack[simtrack[,3]>0,2])
     }
 }
 
