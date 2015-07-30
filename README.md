@@ -5,7 +5,7 @@ Estimating geographic space available to animals based on telemetry data. This i
 **Installation:**
 ```
 require(devtools)
-devtools::install_github("AustralianAntarcticDivision/availability")
+devtools::install_github("AustralianAntarcticDataCentre/availability")
 ```
 
 **Example usage:**
@@ -16,4 +16,4 @@ arf=surrogate_arfit(realtrack)
 st=surrogate_arsimulate(arf,nrow(realtrack),startlonlat=realtrack[1,],do.test.land=TRUE,random.rotation=c(-pi,pi))
 ```
 
-*Note*: `do.test.land` currently will not work in the northern hemisphere, because the included land mask only covers south of the equator.
+*Note*: `do.test.land=TRUE` currently will not work in the northern hemisphere, because the included land mask only covers south of the equator. Use your own land mask function for now.
