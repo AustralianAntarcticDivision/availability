@@ -138,7 +138,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
 
     simtrack=matrix(0,1,3)
     simtrack[1,1:2]=as.numeric(startlonlat)
-    simtrack[1,3]=TRUE ## valid
+    simtrack[1,3]=1 ## valid
     sidx=1 ## pointer into simtrack matrix of last valid point
     for (k in 2:n) {
         ## k is index into xsim, the model of x- and y- step lengths/speeds
@@ -177,12 +177,12 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
             }
             if (point.okay) {
                 if (verbose>1 & is.function(do.test.land)) cat(sprintf("    this proposed point does not lie on land, accepting\n"))
-                simtrack[nrow(simtrack),3]=TRUE
+                simtrack[nrow(simtrack),3]=1
                 sidx=nrow(simtrack) ## update pointer to valid location
                 break
             } else {
                 if (verbose>1) cat(sprintf("    this proposed point lies on land\n"))
-                simtrack[nrow(simtrack),3]=FALSE
+                simtrack[nrow(simtrack),3]=0
             }
         }
         if (! point.okay) {
@@ -193,7 +193,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
         }
     }
     if (return.all.points) {
-        data.frame(lon=simtrack[,1],lat=simtrack[,2],valid=simtrack[,3])
+        data.frame(lon=simtrack[,1],lat=simtrack[,2],valid=as.logical(simtrack[,3]))
     } else {
         data.frame(lon=simtrack[simtrack[,3]>0,1],lat=simtrack[simtrack[,3]>0,2])
     }
