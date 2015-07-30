@@ -87,7 +87,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
         this.rotation=0
         ## apply rotation to arfit parms
         for (ntries in 1:100) {
-            rotate.by=angle.normalise(runif(1)*diff(range(random.rotation))+min(random.rotation))
+            rotate.by=angle_normalise(runif(1)*diff(range(random.rotation))+min(random.rotation))
             if (verbose>0) cat(sprintf("Rotating track by %.1f degrees\n",rotate.by/pi*180))
             Rm=matrix(c(cos(rotate.by),-sin(rotate.by),sin(rotate.by),cos(rotate.by)),nrow=2,byrow=TRUE)
             rotated.arfit=arfit
@@ -149,7 +149,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
             xsim[k,]=t(A %*% t(xsim[k-1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
             ## calculate track point from steps
             tempx=destPoint(simtrack[sidx,1:2],90,xsim[k,1]) # x step
-            tempx[1]=angle.normalise(tempx[1]/180*pi)/pi*180 ## ensure longitude is in range -180 to 180
+            tempx[1]=angle_normalise(tempx[1]/180*pi)/pi*180 ## ensure longitude is in range -180 to 180
             tempy=destPoint(simtrack[sidx,1:2],0,xsim[k,2]) # y step
             ## note that destPoint will handle the case where a step crosses 90S or 90N
             simtrack=rbind(simtrack,c(tempx[1],tempy[2],NA)) ## 3rd entry (valid) is NA for now
@@ -235,8 +235,8 @@ calc_distbearing=function(lonlat) {
 }
 
 
-angle.normalise=function(x) {
-    ## normalize angle to range [-pi,pi)
+angle_normalise=function(x) {
+    ## normalize angle in radians to range [-pi,pi)
     (x+pi)%%(2*pi)-pi
 }
 
