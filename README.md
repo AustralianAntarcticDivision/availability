@@ -1,6 +1,6 @@
 # Availability
 
-Estimating geographic space available to animals based on telemetry data. This is entirely experimental code, use at your own risk. This code is likely to change in the future and in particular may be reimplemented to use existing R package functionality.
+Estimating geographic space available to animals based on telemetry data.
 
 **Installation:**
 ```
