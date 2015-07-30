@@ -165,7 +165,7 @@ surrogate_arsimulate=function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,do.t
                 if (verbose>1) cat(sprintf("    the proposed point has been nudged to %.3f, %.3f because of the next fixed point\n",simtrack[nrow(simtrack),1],simtrack[nrow(simtrack),2]))
             }
             if (is.function(do.test.land)) {
-                if (fixed$index[next_fixed]!=k) {
+                if (is.na(next_fixed) || fixed$index[next_fixed]!=k) {
                     ## test if point over land, but not if this is a fixed point
                     #lonidx=which.min(abs(land.lon-simtrack[nrow(simtrack),1]))
                     #latidx=which.min(abs(land.lat-simtrack[nrow(simtrack),2]))
