@@ -10,6 +10,7 @@ Description: Estimating geographic space available to animals based on
 Imports:
     assertthat,
     geosphere,
+    testthat,
     png
 Suggests:
 License: MPL-2

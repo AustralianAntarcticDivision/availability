@@ -5,7 +5,7 @@
 #' @name availability
 #' @author Ben Raymond \email{ben.raymond@@aad.gov.au}
 #' @docType package
-#' @import assertthat
+#' @import assertthat testthat
 #' @importFrom png readPNG
 #' @importFrom geosphere distVincentyEllipsoid finalBearing distVincentySphere
 NULL
