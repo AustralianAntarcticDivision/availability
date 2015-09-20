@@ -2,23 +2,28 @@
 % Please edit documentation in R/availability.R
 \name{surrogate_arfit}
 \alias{surrogate_arfit}
-\title{Fit first-order vector-autoregressive model to track}
+\title{VAR(1) track model}
 \usage{
 surrogate_arfit(lonlat)
 }
 \arguments{
-\item{lonlat}{array: 2-column matrix or data.frame with longitude, latitude of each point}
+\item{lonlat}{a 2-column matrix or dataframe with longitude and
+latitude of each point}
 }
 \value{
-object of class "ar"
+An object of class "ar"
 }
 \description{
 Fit first-order vector-autoregressive model to track
+}
+\details{
+This function fits the vector AR(1) model used to model the track
+incements in \code{\link{surrogate_arsimulate}}.
 }
 \author{
 Ben Raymond
 }
 \seealso{
-\code{\link{ar}} \code{\link{surrogate_arsimulate}}
+\code{\link{ar}}, \code{\link{surrogate_arsimulate}}
 }
 

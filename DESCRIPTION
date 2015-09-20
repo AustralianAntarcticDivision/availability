@@ -6,7 +6,7 @@ Date: 2015-07-31
 Author: Ben Raymond
 Maintainer: Ben Raymond <ben.raymond@aad.gov.au>
 Description: Estimating geographic space available to animals based on
-    telemetry data
+    telemetry data.
 Imports:
     assertthat,
     geosphere,

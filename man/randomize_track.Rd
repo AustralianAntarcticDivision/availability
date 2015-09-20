@@ -2,21 +2,34 @@
 % Please edit documentation in R/availability.R
 \name{randomize_track}
 \alias{randomize_track}
-\title{Compute surrogate track by randomizing the steps of an observed track}
+\title{Randomized track}
 \usage{
-randomize_track(lonlat, rotate = c(-pi, pi))
+randomize_track(lonlat, rotate = c(-pi, pi), reorder = FALSE)
 }
 \arguments{
-\item{lonlat}{array: 2-column matrix or data.frame with longitude, latitude of each point}
+\item{lonlat}{a 2-column matrix or dataframe with longitude and
+latitude of each point}
 
-\item{rotate}{array: 2-element numeric giving the lower and upper limits of the random rotation to apply to the randomized track}
+\item{rotate}{a 2-element numeric vector giving the lower and
+upper limits of the random rotation to apply to the randomized
+track}
+
+\item{reorder}{should the track steps be randomly reordered.}
 }
 \value{
-2-column data.frame with longitude,latitude of randomized track points
+A dataframe with columns
+\item{\code{lon}}{the longitude of the randomized track}
+\item{\code{lat}}{the latitude of the randomized track}
 }
 \description{
-Assumes that steps are equally spaced in time. Probably not a particular good way of doing it since it destroys the autocorrelation
-structure of the track.
+Compute surrogate track by randomizing the steps of an observed
+track
+}
+\details{
+Converts a track to a distance/bearing representation, and then
+reconstructs a new track by randomly perturbing the bearings of
+each increment, and otpionally, randomly reordering the
+increments.
 }
 \author{
 Ben Raymond

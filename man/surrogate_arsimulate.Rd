@@ -2,43 +2,76 @@
 % Please edit documentation in R/availability.R
 \name{surrogate_arsimulate}
 \alias{surrogate_arsimulate}
-\title{Simulate track from fitted vector autoregressive model}
+\title{Simulated VAR(1) tracks}
 \usage{
 surrogate_arsimulate(arfit, n, startlonlat, fixed = NULL, endlonlat = NULL,
   do.test.land = TRUE, random.rotation = c(-pi, pi), verbose = 0,
   return.all.points = FALSE, intermediate.tries = 10)
 }
 \arguments{
-\item{arfit}{: fitted object of class "ar" as returned by \code{\link{surrogate_arfit}}}
+\item{arfit}{fitted object of class "ar" as returned by
+\code{\link{surrogate_arfit}}}
 
-\item{n}{numeric: number of points to simulate}
+\item{n}{number of points to simulate}
 
-\item{startlonlat}{numeric: 2-element array with starting longitude and latitude}
+\item{startlonlat}{2-element vector of starting longitude and latitude}
 
-\item{fixed}{data.frame or matrix: first column is the index (from 1:n) of each fixed point, and the second and third columns give the associated longitude and latitude}
+\item{fixed}{a dataframe or matrix in which the first column is
+the index (from 1:n) of each fixed point, and the second and third
+columns give the associated longitude and latitude}
 
-\item{endlonlat}{numeric: 2-element array with ending longitude and latitude. If NULL, no end constraint is imposed except for land masking (if land masking is used). This is a simple way of imposing a return-to-starting-location constraint; for more complex constraints use the \code{fixed} argument}
+\item{endlonlat}{a 2-element vector with ending longitude and
+latitude. If NULL, no end constraint is imposed except for land
+masking (if land masking is used). This is a simple way of
+imposing a return-to-starting-location constraint; for more
+complex constraints use the \code{fixed} argument}
 
-\item{do.test.land}{logical or function: if TRUE, use the included land mask to avoid land. Alternatively, a function can be passed that returns TRUE (point is okay, not on land) or FALSE (point is on land) for a given lon,lat. Note that land masking is ignored for fixed points. Note also that it is possible to create a sitation where tracks are difficult or impossible to simulate, because a fixed point is sufficiently far onto land that the track cannot reach it.}
+\item{do.test.land}{a logical or function. If TRUE, use the
+included land mask to avoid land. Alternatively, a function can be
+passed that returns TRUE (point is okay, not on land) or FALSE
+(point is on land) for a given lon,lat. Note that land masking is
+ignored for fixed points. Note also that it is possible to create
+a sitation where tracks are difficult or impossible to simulate,
+because a fixed point is sufficiently far onto land that the track
+cannot reach it.}
 
-\item{random.rotation}{numeric: 2-element array giving the range of the rotation to apply to the randomized track (values in radians). use \code{random.rotation=NULL} for no such rotation. The angle can be restricted using \code{random.rotation=c(min.angle,max.angle)} - this may speed up computation by avoiding impossible angles (e.g. tracks over a land mass)}
+\item{random.rotation}{a 2-element vector giving the range of
+the rotation to apply to the randomized track (values in
+radians). use \code{random.rotation=NULL} for no such rotation. The
+angle can be restricted using
+\code{random.rotation=c(min.angle,max.angle)} - this may speed up
+computation by avoiding impossible angles (e.g. tracks over a land
+mass)}
 
-\item{verbose}{numeric: 0-3, if >0 spit out extra information which may be helpful if things don't work as expected. Larger numbers mean more output}
+\item{verbose}{an integer 0-3, if >0 spit out extra information
+which may be helpful if things don't work as expected. Larger
+numbers mean more output}
 
-\item{return.all.points}{logical: if TRUE, return points that were proposed but rejected due to land masking (may be helpful for debugging). If TRUE, the returned data.frame will have an extra column named "valid"}
+\item{return.all.points}{if TRUE, return points that were proposed
+but rejected due to land masking (may be helpful for debugging). If
+TRUE, the returned data.frame will have an extra column named
+"valid"}
 
-\item{intermediate.tries}{numeric: when land-masking, try how many times to find a valid point at each step before giving up and starting again? Higher values may improve overall run-time, but too-high values may yield tracks that aren't a good representation of the fitted model}
+\item{intermediate.tries}{when land-masking, try how many times to
+find a valid point at each step before giving up and starting
+again? Higher values may improve overall run-time, but too-high
+values may yield tracks that aren't a good representation of the
+fitted model}
 }
 \value{
-2- or 3-column data.frame with longitude,latitude of simulated track points (and point validity, if return.all.points is TRUE)
+2 or 3 column dataframe with the longitude and latitude
+of simulated track points (and point validity, if
+return.all.points is TRUE)
 }
 \description{
-Note that land masking uses a built-in land mask image, and it only covers the southern hemisphere. A future version will do something about this.
+Simulate track from fitted vector autoregressive model
+}
+\details{
+Note that land masking uses a built-in land mask image, and it
+only covers the southern hemisphere. A future version will do
+something about this.
 }
 \author{
 Ben Raymond
-}
-\seealso{
-\code{\link{surrogate_arfit}}
 }
 
