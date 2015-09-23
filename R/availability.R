@@ -1,6 +1,3 @@
-
-
-
 ##' Compute surrogate track by randomizing the steps of an observed
 ##' track
 ##'
@@ -37,7 +34,8 @@ randomize_track <- function(lonlat,rotate=c(-pi,pi),reorder=FALSE) {
 }
 
 
-##' Calculate distances in metres and bearing between successive points along track.
+##' Calculate distances in metres and bearing between successive
+##' points along track.
 ##'
 ##' This is an internal function used by \code{\link{randomize_track}}.
 ##' @title Distance and Bearing
@@ -59,30 +57,40 @@ calc_distbearing <- function(lonlat) {
 
 ##' Fit first-order vector-autoregressive model to track
 ##'
-##' This function fits the vector AR(1) model used to model the track
-##' incements in \code{\link{surrogate_arsimulate}}.
+##' This function fits the vector AR(1) model used as the \code{model}
+##' argument to \code{\link{surrogateAR}}.
+##'
 ##' @title VAR(1) track model
 ##' @param lonlat a 2-column matrix or dataframe with longitude and
 ##' latitude of each point
 ##' @return An object of class "ar"
-##' @seealso \code{\link{ar}}, \code{\link{surrogate_arsimulate}}
+##' @seealso \code{\link{ar}}, \code{\link{surrogateAR}}
 ##' @author Ben Raymond
 ##' @export
-surrogate_arfit <- function(lonlat) {
+surrogateARModel <- function(lonlat) {
 
-  ## fixed at 1st order model for now. Might allow this as a param,
+  ## Fixed at 1st order model for now. Might allow this as a param,
   ## but needs surrogate_arsimulate code updated to handle higher
   ## model orders first
   model.order=1
 
   ## Calculate distance increments dx, dy for each time step
   nr <- nrow(lonlat)
+  lonlat <- lonlat[,1:2,drop=FALSE]
   dx <- distVincentyEllipsoid(lonlat[-nr,],cbind(lonlat[-1,1],lonlat[-nr,2]))*sign(lonlat[-nr,1]-lonlat[-1,1])
   dy <- distVincentyEllipsoid(lonlat[-nr,],cbind(lonlat[-nr,1],lonlat[-1,2]))*sign(lonlat[-nr,2]-lonlat[-1,2])
 
   ## Fit AR1 to distance increments
   dxdy <- data.frame(dx=dx,dy=dy)
   ar(dxdy,order.max=model.order,aic=FALSE)
+}
+
+##' @rdname surrogateARModel
+##' @export
+surrogate_arfit <- function(lonlat) {
+  warning("surrogate_arfit is deprecated and will be removed: ",
+          "use surrogateARModel().")
+  surrogateARModel(lonlat)
 }
 
 
@@ -132,13 +140,53 @@ surrogate_arfit <- function(lonlat) {
 ##' again? Higher values may improve overall run-time, but too-high
 ##' values may yield tracks that aren't a good representation of the
 ##' fitted model
+##' @param original if \code{TRUE}, use the original algorithm.
 ##' @return 2 or 3 column dataframe with the longitude and latitude
 ##' of simulated track points (and point validity, if
 ##' return.all.points is TRUE)
 ##' @author Ben Raymond
-##' @importFrom geosphere destPoint
 ##' @export
 surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
+                                 do.test.land=TRUE,random.rotation=c(-pi,pi),
+                                 verbose=0,return.all.points=FALSE,intermediate.tries=10,
+                                 original=FALSE) {
+  if(original) {
+    xs <- surrogate_arsimulate0(arfit,n,startlonlat,fixed,endlonlat,do.test.land,
+                                random.rotation,verbose,return.all.points,intermediate.tries)
+    list(ts=1:nrow(xs),xs=xs)
+  } else {
+    warning("surrogate_arsimulate is deprecated and will be removed: ",
+            "use surrogateAR().")
+    if(verbose>0) warning("Only the original surrogate_arsimulate supports verbose")
+    ## Translate fixed point specification
+    xs <- matrix(NA,n,2)
+    fxd <- logical(n)
+    xs[1,] <- startlonlat
+    fxd[1] <- TRUE
+    if(!is.null(endlonlat)) {
+      xs[n,] <- endlonlat
+      fxd[n] <- TRUE
+    }
+    for(i in seq_len(NROW(fixed))) {
+      k <- fixed$index[i]
+      fxd[k] <- TRUE
+      xs[k,] <- c(fixed$lon[i],fixed$lat[i])
+    }
+    ## Translate landmask specification
+    if(is.logical(do.test.land)) {
+      do.test.land <- if(do.test.land) landmask_init() else function(tm,pt) TRUE
+    }
+    ## Use variant algorithm.
+    surrogateAR(arfit,xs,1:nrow(xs),fxd,do.test.land,random.rotation,return.all.points)
+  }
+}
+
+
+
+##' @rdname surrogate_arsimulate
+##' @importFrom geosphere destPoint
+##' @export
+surrogate_arsimulate0 <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
                                  do.test.land=TRUE,random.rotation=c(-pi,pi),
                                  verbose=0,return.all.points=FALSE,intermediate.tries=10) {
 
@@ -153,7 +201,7 @@ surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
     this.rotation <- 0
     ## apply rotation to arfit parms
     for (ntries in 1:100) {
-      rotate.by <- angle_normalise(runif(1)*diff(range(random.rotation))+min(random.rotation))
+      rotate.by <- runif(1,random.rotation[1],random.rotation[2])
       if(verbose>0) cat(sprintf("Rotating track by %.1f degrees\n",rotate.by/pi*180))
       Rm <- matrix(c(cos(rotate.by),-sin(rotate.by),sin(rotate.by),cos(rotate.by)),nrow=2,byrow=TRUE)
       rotated.arfit <- arfit
@@ -194,10 +242,12 @@ surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
   tempchol <- chol(fitted.var) ## calculate chol decomposition once
   xsim <- matrix(0,n,2)
   ## burnin for 100 steps
+  xsim[1,] <- fitted.mean
   for (k in 1:100) {
     thisrand <- drop(rnorm(2) %*% tempchol)
-    xsim[1,] <- t(A %*% t(xsim[1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
+    xsim[1,] <- t(A %*% (xsim[1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
   }
+  print(xsim[1,]-fitted.mean)
 
   simtrack <- matrix(0,1,3)
   simtrack[1,1:2] <- as.numeric(startlonlat)
@@ -209,10 +259,10 @@ surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
     if (verbose>0) cat(sprintf("Step %d, current location is %.3f, %.3f\n",k,simtrack[sidx,1],simtrack[sidx,2]))
     for (land.tries in 1:intermediate.tries) {
       thisrand <- matrix(rnorm(2) %*% tempchol,nrow=1)
-      xsim[k,]  <- t(A %*% t(xsim[k-1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
+      xsim[k,]  <- t(A %*% (xsim[k-1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
       ## calculate track point from steps
       tempx <- destPoint(simtrack[sidx,1:2],90,xsim[k,1]) # x step
-      tempx[1] <- angle_normalise(tempx[1]/180*pi)/pi*180 ## ensure longitude is in range -180 to 180
+      tempx[1] <- (tempx[1]+180)%%360-180 ## ensure longitude is in range -180 to 180
       tempy <- destPoint(simtrack[sidx,1:2],0,xsim[k,2]) # y step
       ## note that destPoint will handle the case where a step crosses 90S or 90N
       simtrack <- rbind(simtrack,c(tempx[1],tempy[2],NA)) ## 3rd entry (valid) is NA for now
@@ -228,7 +278,7 @@ surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
       }
       if(is.function(do.test.land)) {
         if(is.na(next_fixed) || fixed$index[next_fixed]!=k) {
-          point.okay=do.test.land(simtrack[nrow(simtrack),])
+          point.okay=do.test.land(0,simtrack[nrow(simtrack),])
         } else {
           if(verbose>1) cat("    not checking land-mask for this point, because it is a fixed point.\n")
         }
@@ -258,19 +308,307 @@ surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
 }
 
 
-
-
-##' Fold angles (radians) into [-pi,pi)
+##' Generate new tracks from a VAR(1)
 ##'
-##' This is an internal function used by
-##' \code{\link{surrogate_arsimulate}}.
-##' @title Fold angles into [-pi,pi)
-##' @param x a vector of angles
-##' @return a vector of folded angles
-##' @author Ben Raymond
-angle_normalise <- function(x) {
-  ## normalize angle in radians to range [-pi,pi)
-  (x+pi)%%(2*pi)-pi
+##' Given a fitted VAR(1) model and a template track, this function
+##' generates a new track of the same length that coincides with the
+##' template at the start point and optionally other specified points
+##' along the track.
+##'
+##' The template track must be supplied as a matrix representing a
+##' sequence of locations where each row is a location and the columns
+##' represent longitude and latitude.  The locations must be
+##' equispaced in time, and can be generated as the "p" location types
+##' from \code{crwPredict}.
+##'
+##' The model object is generated by \code{surrogateVARModel} from a
+##' fitted crawl track.  This fits a VAR(1) model to the increments in
+##' longitude and latitude.
+##'
+##' Locations from the template track can be marked as fixed with the
+##' \code{fixed} argument. In the current implementation the first
+##' location must always be fixed.
+##'
+##' Additional constraints can be placed on the path by rejection
+##' sampling through the function \code{point.check}.  This function
+##' must accept a state and return a boolean indicating whether the
+##' point is acceptable.  For example, the track can be constrained to
+##' the ocean by supplying a \code{point.check} function that compares
+##' the state to a land mask and returns \code{FALSE} for states
+##' corresponding to locations that fall on land.
+##'
+##' @title VAR bridge sampler
+##' @param model a model generated with \code{surrogateVARModel}.
+##' @param ts the times at which the track is sampled
+##' @param xs the template sequence of states
+##' @param fixed a logical vector indicating which locations in the
+##' template path are to be held fixed.
+##' @param point.check function that accepts a state and
+##' returns boolean indicating whether the state is acceptable.
+##' @param random.rotation the upper and lower limits (radians) of the
+##' rotation applied to the VAR(1) model.
+##' @param partial if \code{TRUE}, a partial track is returned if the
+##' sampling fails.
+##' @return An array of states the define the simulated path.
+##' @export
+surrogateAR <- function(model,xs,ts=1:nrow(xs),
+                        fixed=rep(c(TRUE,FALSE,TRUE),c(1,nrow(xs)-2,1)),
+                        point.check=function(tm,pt) TRUE,
+                        random.rotation=c(-pi,pi),partial=FALSE) {
+
+  xs <- unname(xs[,1:2,drop=FALSE])
+  n <- nrow(xs)
+
+  ## Construct that fit that would have been obtained had the data been
+  ## rotated with rotation matrix R.
+  rotateVAR1 <- function(model,theta) {
+    if(theta!=0) {
+      nms <- names(model$x.mean)
+      R <- matrix(c(cos(theta),sin(theta),-sin(theta),cos(theta)),2,2)
+      model$ar[1,,] <- R%*%model$ar[1,,]%*%t(R)
+      model$var.pred <- R%*%model$var.pred%*%t(R)
+      model$x.mean <- model$x.mean%*%t(R)
+      names(model$x.mean) <- nms
+    }
+    model
+  }
+
+  ## Simulate forward from k0.  Returns index of last fixed point
+  ## reached if an acceptable next candidate cannot be found.
+  sample <- function(k0) {
+    z <- double(2)
+    for(i in 1:100) {
+      z <- drop(A%*%z)+drop(rnorm(2)%*%U)
+    }
+    print(z)
+
+    ## Simulate forward from k0
+    x <- xs[k0,]
+    k <- k0+1
+
+    ## Find remaining fixed points
+    kfixed <- if(k<=n) (k:n)[fixed[k:n]] else integer(0)
+
+    while(k <= n) {
+
+      if(fixed[k]) {
+        ## Skip fixed points
+        while(k<=n && fixed[k]) {
+          x <- xs[(k0 <- k),]
+          k <- k+1
+        }
+        ## Find any remaining fixed points
+        kfixed <- if(k<=n) (k:n)[fixed[k:n]] else integer(0)
+        ## Re-initialize z
+        z <- double(2)
+        for(i in 1:100) z <- drop(A%*%z)+drop(rnorm(2)%*%U)
+      } else {
+        ## Try at most 100 new candidates
+        for(r in 1:100) {
+          ## Trial z - simulate from centred VAR(1) model
+          z1 <- drop(A%*%z)+drop(rnorm(2)%*%U)
+          ## Trial x - take step in lon then lat.
+          x1 <- as.vector(destPoint(destPoint(x,90,z1[1]+mu[1]),0,z1[2]+mu[2]))
+          ## Nudge - this seems a little aggressive
+          if(length(kfixed))
+            x1 <- x1 + (xs[kfixed[1],]-x1)/(kfixed[1]-k+1)
+          ## Test current candidate
+          if(point.check(ts[k],x1)) {
+            ## Accept candidate
+            z <- z1
+            xs[k,] <<- (x <- x1)
+            k <- k+1
+            break
+          } else {
+            ## On failure return last fixed point
+            if(r==100) return(k0)
+          }
+        }
+      }
+    }
+    ## Return n+1 on success
+    return(n+1)
+  }
+
+  ## Try 100 rotations of the model
+  for(i in 1:100) {
+    theta <- if(is.null(random.rotation)) 0 else runif(1,random.rotation[1],random.rotation[2])
+    model0 <- rotateVAR1(model,theta)
+    A <- unname(model0$ar[1,,])
+    U <- chol(unname(model0$var.pred))
+    mu <- as.vector(model0$x.mean)
+    k <- 1
+    for(i in 1:50) {
+      k <- if(i < 25) sample(k) else sample(1)
+      if(k>n) return(list(xs=xs,ts=ts))
+    }
+  }
+  ## Return partial track or NULL
+  if(partial) {
+    xs[k:n,] <- NA
+    list(xs=xs,ts=ts)
+  }
 }
 
 
+
+
+##' Generate Transition and Covariance Matrices for a simple Crawl Model
+##'
+##' Generates the transition and covariance matrices of the state
+##' space model for time increment \code{dt}, corresponding to a
+##' fitted crawl model with no drift and no covariates.
+##'
+##' Currently no polar adjustment is made.
+##'
+##' The matrices are generated assuming the state variables are stored
+##' as a vector in the order longitude mu and nu then latitude mu and
+##' nu.  The parametrization is defined as in the crawl source not the
+##' paper, which differs by a factor of \eqn{\beta^{2}} in the
+##' definition of \eqn{\sigma^{2}}.
+##'
+##' @title Crawl Movement Model
+##' @param fit a fitted crawl object
+##' @param dt the fixed time increment
+##' @return A list containing
+##' \item{\code{A}}{the transition matrix}
+##' \item{\code{Q}}{the covariance matrix}
+##' \item{\code{dt}}{the time increment}
+##' @export
+surrogateCrawlModel <- function(fit,dt) {
+
+  ## Components of the transition and covariance matrices
+  a <- function(beta) (1-exp(-beta*dt))/beta
+  b <- function(beta) exp(-beta*dt)
+  v11 <- function(sigma,beta) (sigma)^2*(dt-2*a(beta)+a(2*beta))
+  v12 <- function(sigma,beta) (sigma)^2*(1-2*b(beta)+b(2*beta))/2
+  v22 <- function(sigma,beta) (beta*sigma)^2*a(2*beta)
+
+  ## This matches the code but differs from the paper.
+  n.err <- fit$n.errX+fit$n.errY
+  sigma1 <- sigma2 <- exp(fit$par[n.err+1])
+  beta1 <- beta2 <- exp(fit$par[n.err+2])
+
+  ## Transition and covariance matrices
+  A <- matrix(c(1,0,a(beta1),0,
+                0,1,0,a(beta2),
+                0,0,b(beta1),0,
+                0,0,0,b(beta2)),4,4,byrow=T)
+  Q <- matrix(c(v11(sigma1,beta1),0,v12(sigma1,beta1),0,
+                0,v11(sigma2,beta2),0,v12(sigma2,beta2),
+                v12(sigma1,beta1),0,v22(sigma1,beta1),0,
+                0,v12(sigma2,beta2),0,v22(sigma2,beta2)),4,4,byrow=T)
+  list(A=A,Q=Q,dt=dt)
+}
+
+##' Generate new tracks from a Crawl model
+##'
+##' Given a fitted crawl model and a template track, this function
+##' generates a new track of the same length that coincides with the
+##' template at the start point and optionally other specified points
+##' along the track.
+##'
+##' The template track must be supplied as a matrix representing a
+##' sequence of states where each row is a state and each column a
+##' state variable.  The states must be equispaced in time, and can be
+##' generated as the "p" location types from \code{crwPredict}.
+##'
+##' The crawl model object is generated by \code{crawlModel} from a
+##' fitted crawl model.
+##'
+##' Locations from the template track can be marked as fixed with the
+##' \code{fixed} argument. In the current implementation the first
+##' location must always be fixed.
+##'
+##' Additional constraints can be placed on the path by rejection
+##' sampling through the function \code{point.check}.  This function
+##' must accept a state and return a boolean indicating whether the
+##' point is acceptable.  For example, the track can be constrained to
+##' the ocean by supplying a \code{point.check} function that compares
+##' the state to a land mask and returns \code{FALSE} for states
+##' corresponding to locations that fall on land.
+##'
+##' @title Regressive bridge sampler
+##' @param model a list with the transition and covariance matrices
+##' corresponding to the fitted movement model.
+##' @param xs the template sequence of states
+##' @param ts the times at which the track is sampled
+##' @param fixed a logical vector indicating which locations in the
+##' template path are to be held fixed.
+##' @param point.check function that accepts a state and
+##' returns boolean indicating whether the state is acceptable.
+##' @param Verr error covariance for fixed points.
+##' @param partial if \code{TRUE}, a partial track is returned if the
+##' sampling fails.
+##' @return An array of states the define the simulated path.
+##' @export
+surrogateCrawl <- function(model,xs,ts=1:nrow(xs),
+                           fixed=rep(c(TRUE,FALSE,TRUE),c(1,nrow(xs)-2,1)),
+                           point.check=function(tm,pt) TRUE,
+                           Verr=diag(c(1.0E-4,1.0E-4,1.0E-1,1.0E-1)),
+                           partial=FALSE) {
+
+  ## Extract model matrices
+  A <- model$A
+  Q <- model$Q
+  QI <- solve(Q)
+
+  ## Enforce fixed first state
+  fixed[1] <- TRUE
+
+  xs <- unname(xs[,1:2,drop=FALSE])
+  n <- nrow(xs)
+
+  ## Priors
+  ms <- xs
+  Ps <- array(0,c(nrow(Q),ncol(Q),n))
+
+  ## Forward pass - generate priors from movement model
+  for(k in 1:n)
+    if(fixed[k]) {
+      ms[k,c(2,4)] <- 0
+      Ps[,,k] <- Verr
+    } else {
+      ms[k,] <- A%*%ms[k-1,]
+      Ps[,,k] <- A%*%Ps[,,k-1]%*%t(A)+Q
+    }
+
+  ## Reverse pass - recursively sample by Bayesian regression,
+  ## starting from x[k0,]
+  sample <- function(k0) {
+    x <- ms[k0,] + drop(rnorm(nrow(Verr))%*%chol(Ps[,,k0]))
+    xs[k0,] <<- x
+    for(k in (k0-1):1) {
+      P <- Ps[,,k]
+      PI <- solve(P)
+      b <- PI%*%ms[k,]+t(A)%*%QI%*%x
+      #b <- PI%*%ms[k,]+t(x%*%QI%*%A)
+      ## Sample from N(V^{1} b, V^{-1})
+      R <- chol(t(A)%*%QI%*%A+PI)
+      ## point.check/rejection loop
+      for(r in 1:100) {
+        x <- drop(backsolve(R,backsolve(R,b,transpose=T)+rnorm(length(b))))
+        if(point.check(ts[k],x[c(1,3)])) break
+        ## If fail, return last fixed point
+        if(r==100) return(k0)
+      }
+      xs[k,] <<- x
+
+      ## Allow discontinuity at a fixed point
+      if(fixed[k]) {
+        x <- ms[k,] + drop(rnorm(nrow(Verr))%*%chol(Ps[,,k]))
+        k0 <- k
+      }
+    }
+    ## On success, return 0
+    0
+  }
+
+
+  k <- n
+  for(i in 1:50) {
+    k <- if(i < 25) sample(k) else sample(n)
+    if(k==0) return(list(xs=xs,ts=ts))
+  }
+  NULL
+}

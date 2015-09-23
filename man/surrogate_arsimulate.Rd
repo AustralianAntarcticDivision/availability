@@ -2,9 +2,14 @@
 % Please edit documentation in R/availability.R
 \name{surrogate_arsimulate}
 \alias{surrogate_arsimulate}
+\alias{surrogate_arsimulate0}
 \title{Simulated VAR(1) tracks}
 \usage{
 surrogate_arsimulate(arfit, n, startlonlat, fixed = NULL, endlonlat = NULL,
+  do.test.land = TRUE, random.rotation = c(-pi, pi), verbose = 0,
+  return.all.points = FALSE, intermediate.tries = 10, original = FALSE)
+
+surrogate_arsimulate0(arfit, n, startlonlat, fixed = NULL, endlonlat = NULL,
   do.test.land = TRUE, random.rotation = c(-pi, pi), verbose = 0,
   return.all.points = FALSE, intermediate.tries = 10)
 }
@@ -57,6 +62,8 @@ find a valid point at each step before giving up and starting
 again? Higher values may improve overall run-time, but too-high
 values may yield tracks that aren't a good representation of the
 fitted model}
+
+\item{original}{if \code{TRUE}, use the original algorithm.}
 }
 \value{
 2 or 3 column dataframe with the longitude and latitude

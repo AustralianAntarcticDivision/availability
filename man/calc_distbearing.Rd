@@ -16,7 +16,8 @@ A dataframe with columns
 \item{\code{lat}}{the latitude of the randomized track}
 }
 \description{
-Calculate distances in metres and bearing between successive points along track.
+Calculate distances in metres and bearing between successive
+points along track.
 }
 \details{
 This is an internal function used by \code{\link{randomize_track}}.

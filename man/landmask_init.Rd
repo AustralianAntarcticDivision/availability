@@ -13,8 +13,8 @@ function
 Initialize the land-masking function
 }
 \examples{
-lm=landmask_init() ## initialize land mask function
-lm(c(100,-65)) ## test point lon,lat
+mask  <- landmask_init() ## initialize land mask function
+mask(0,c(100,-65)) ## test point lon,lat
 }
 \seealso{
 \code{\link{surrogate_arsimulate}}

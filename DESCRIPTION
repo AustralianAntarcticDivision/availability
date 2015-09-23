@@ -10,8 +10,10 @@ Description: Estimating geographic space available to animals based on
 Imports:
     assertthat,
     geosphere,
+    raster,
     testthat,
     png
 Suggests:
-License: MPL-2
+    crawl
+License: Mozilla Public License 2.0
 LazyLoad: yes
