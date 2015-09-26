@@ -247,7 +247,6 @@ surrogate_arsimulate0 <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
     thisrand <- drop(rnorm(2) %*% tempchol)
     xsim[1,] <- t(A %*% (xsim[1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
   }
-  print(xsim[1,]-fitted.mean)
 
   simtrack <- matrix(0,1,3)
   simtrack[1,1:2] <- as.numeric(startlonlat)
@@ -380,7 +379,6 @@ surrogateAR <- function(model,xs,ts=1:nrow(xs),
     for(i in 1:100) {
       z <- drop(A%*%z)+drop(rnorm(2)%*%U)
     }
-    print(z)
 
     ## Simulate forward from k0
     x <- xs[k0,]
@@ -556,7 +554,7 @@ surrogateCrawl <- function(model,xs,ts=1:nrow(xs),
   ## Enforce fixed first state
   fixed[1] <- TRUE
 
-  xs <- unname(xs[,1:2,drop=FALSE])
+  xs <- unname(xs)
   n <- nrow(xs)
 
   ## Priors
@@ -566,7 +564,7 @@ surrogateCrawl <- function(model,xs,ts=1:nrow(xs),
   ## Forward pass - generate priors from movement model
   for(k in 1:n)
     if(fixed[k]) {
-      ms[k,c(2,4)] <- 0
+      ms[k,3:4] <- 0
       Ps[,,k] <- Verr
     } else {
       ms[k,] <- A%*%ms[k-1,]
@@ -588,7 +586,7 @@ surrogateCrawl <- function(model,xs,ts=1:nrow(xs),
       ## point.check/rejection loop
       for(r in 1:100) {
         x <- drop(backsolve(R,backsolve(R,b,transpose=T)+rnorm(length(b))))
-        if(point.check(ts[k],x[c(1,3)])) break
+        if(point.check(ts[k],x[1:2])) break
         ## If fail, return last fixed point
         if(r==100) return(k0)
       }
