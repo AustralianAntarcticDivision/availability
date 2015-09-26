@@ -40,21 +40,31 @@ landmask_init=function() {
 
 ##' A land mask based on ETOPO1
 ##'
-##' Generate a land mask function based on ETOPO1 topography.  The
-##' mask is constant, the \code{tm} argument to the mask is
-##' ignored. The \code{land} argument determines whether the mask
-##' function returns \code{TRUE} or \code{FALSE} for land.
+##' Generate a land mask function based on ETOPO1 topography. The
+##' etopo geotiff is not bundled with the package and must be
+##' downloaded from
+##' \url{https://www.ngdc.noaa.gov/mgg/global/global.html}.
+##'
+##' When the mask is intially created, a native raster (grd,gri)
+##' version of the geotiff is created in the directory \code{tmp},
+##' which must be writable. This file can be deleted when the
+##' computation is finished.
+##'
+##' The \code{land} argument determines whether the mask function
+##' returns \code{TRUE} or \code{FALSE} for land. The mask is constant
+##' and the \code{tm} argument to the mask is ignored.
 ##'
 ##' @title Land Mask
 ##' @param basename the name of the etopo geotiff (without file extension).
 ##' @param path the path to a folder containing the etopo geotiff
+##' @param tmp the path to a writeable folder
 ##' @param land the logical value to return for land.
 ##' @return a logical indicating whether the point is land or sea.
 ##' @importFrom raster raster writeRaster extract
 ##' @export
-etopoMask <- function(basename="ETOPO1_Bed_c_geotiff",path=".",land=FALSE) {
+etopoMask <- function(basename="ETOPO1_Bed_c_geotiff",path=".",tmp=path,land=FALSE) {
   tif <- file.path(path,paste0(basename,".tif"))
-  grd <- file.path(path,paste0(basename,".grd"))
+  grd <- file.path(tmp,paste0(basename,".grd"))
 
   if(!file.exists(grd)) writeRaster(raster(tif),grd)
   etopo <- raster(grd)
