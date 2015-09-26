@@ -38,27 +38,29 @@ landmask_init=function() {
 ##    test_point
 ##}
 
-##' A land mask based on Gebco 08.
+##' A land mask based on ETOPO1
 ##'
-##' Generate a land mask function based on Gebco 08 topography.  The
+##' Generate a land mask function based on ETOPO1 topography.  The
 ##' mask is constant, the \code{tm} argument to the mask is
 ##' ignored. The \code{land} argument determines whether the mask
 ##' function returns \code{TRUE} or \code{FALSE} for land.
 ##'
 ##' @title Land Mask
-##' @param path the path to a folder containing gebco_08.tif
-##' @param land logical - the value to return for land.
+##' @param basename the name of the etopo geotiff (without file extension).
+##' @param path the path to a folder containing the etopo geotiff
+##' @param land the logical value to return for land.
 ##' @return a logical indicating whether the point is land or sea.
 ##' @importFrom raster raster writeRaster extract
 ##' @export
-gebcoMask <- function(path="c:/Gebco/",land=FALSE) {
-  if(!file.exists(file.path(path,"gebco_08.grd")))
-    writeRaster(raster(file.path(path,"gebco_08.tif")),file.path(path,"gebco_08.grd"))
+etopoMask <- function(basename="ETOPO1_Bed_c_geotiff",path=".",land=FALSE) {
+  tif <- file.path(path,paste0(basename,".tif"))
+  grd <- file.path(path,paste0(basename,".grd"))
 
-  gebco <- raster(file.path(path,"gebco_08.grd"))
+  if(!file.exists(grd)) writeRaster(raster(tif),grd)
+  etopo <- raster(grd)
 
   if(land)
-    function(tm,pt) pt[2] < 90 & pt[2] > -90 & extract(gebco,cbind((pt[1]+180)%%360-180,pt[2])) >= 0
+    function(tm,pt) pt[2] < 90 & pt[2] > -90 & extract(etopo,cbind((pt[1]+180)%%360-180,pt[2])) >= 0
   else
-    function(tm,pt) pt[2] < 90 & pt[2] > -90 & extract(gebco,cbind((pt[1]+180)%%360-180,pt[2])) <= 0
+    function(tm,pt) pt[2] < 90 & pt[2] > -90 & extract(etopo,cbind((pt[1]+180)%%360-180,pt[2])) <= 0
 }
