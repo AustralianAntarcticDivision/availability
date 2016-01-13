@@ -15,7 +15,7 @@ realtrack=... ## load observed track, 2-column matrix of longitude and latitude.
 arf=surrogateARModel(realtrack) ## fit AR model to track
 (arfit,tp$xs,tp$ts)
 ## simulate new track
-st=surrogateAR(arf,realtrack,1:nrow(realtrack))
+st=surrogateAR(arf,realtrack)
 ```
 
 *Note*: `do.test.land=TRUE` currently will not work in the northern hemisphere, because the included land mask only covers south of the equator. Use your own land mask function for now.
