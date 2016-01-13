@@ -85,227 +85,6 @@ surrogateARModel <- function(lonlat) {
   ar(dxdy,order.max=model.order,aic=FALSE)
 }
 
-##' @rdname surrogateARModel
-##' @export
-surrogate_arfit <- function(lonlat) {
-  warning("surrogate_arfit is deprecated and will be removed: ",
-          "use surrogateARModel().")
-  surrogateARModel(lonlat)
-}
-
-
-##' Simulate track from fitted vector autoregressive model
-##'
-##' Note that land masking uses a built-in land mask image, and it
-##' only covers the southern hemisphere. A future version will do
-##' something about this.
-##'
-##' @title Simulated VAR(1) tracks
-##' @param arfit fitted object of class "ar" as returned by
-##' \code{\link{surrogate_arfit}}
-##' @param n number of points to simulate
-##' @param startlonlat 2-element vector of starting longitude and latitude
-##' @param fixed a dataframe or matrix in which the first column is
-##' the index (from 1:n) of each fixed point, and the second and third
-##' columns give the associated longitude and latitude
-##' @param endlonlat a 2-element vector with ending longitude and
-##' latitude. If NULL, no end constraint is imposed except for land
-##' masking (if land masking is used). This is a simple way of
-##' imposing a return-to-starting-location constraint; for more
-##' complex constraints use the \code{fixed} argument
-##' @param do.test.land a logical or function. If TRUE, use the
-##' included land mask to avoid land. Alternatively, a function can be
-##' passed that returns TRUE (point is okay, not on land) or FALSE
-##' (point is on land) for a given lon,lat. Note that land masking is
-##' ignored for fixed points. Note also that it is possible to create
-##' a sitation where tracks are difficult or impossible to simulate,
-##' because a fixed point is sufficiently far onto land that the track
-##' cannot reach it.
-##' @param random.rotation a 2-element vector giving the range of
-##' the rotation to apply to the randomized track (values in
-##' radians). use \code{random.rotation=NULL} for no such rotation. The
-##' angle can be restricted using
-##' \code{random.rotation=c(min.angle,max.angle)} - this may speed up
-##' computation by avoiding impossible angles (e.g. tracks over a land
-##' mass)
-##' @param verbose an integer 0-3, if >0 spit out extra information
-##' which may be helpful if things don't work as expected. Larger
-##' numbers mean more output
-##' @param return.all.points if TRUE, return points that were proposed
-##' but rejected due to land masking (may be helpful for debugging). If
-##' TRUE, the returned data.frame will have an extra column named
-##' "valid"
-##' @param intermediate.tries when land-masking, try how many times to
-##' find a valid point at each step before giving up and starting
-##' again? Higher values may improve overall run-time, but too-high
-##' values may yield tracks that aren't a good representation of the
-##' fitted model
-##' @param original if \code{TRUE}, use the original algorithm.
-##' @return 2 or 3 column dataframe with the longitude and latitude
-##' of simulated track points (and point validity, if
-##' return.all.points is TRUE)
-##' @author Ben Raymond
-##' @export
-surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
-                                 do.test.land=TRUE,random.rotation=c(-pi,pi),
-                                 verbose=0,return.all.points=FALSE,intermediate.tries=10,
-                                 original=FALSE) {
-  if(original) {
-    xs <- surrogate_arsimulate0(arfit,n,startlonlat,fixed,endlonlat,do.test.land,
-                                random.rotation,verbose,return.all.points,intermediate.tries)
-    list(ts=1:nrow(xs),xs=xs)
-  } else {
-    warning("surrogate_arsimulate is deprecated and will be removed: ",
-            "use surrogateAR().")
-    if(verbose>0) warning("Only the original surrogate_arsimulate supports verbose")
-    ## Translate fixed point specification
-    xs <- matrix(NA,n,2)
-    fxd <- logical(n)
-    xs[1,] <- startlonlat
-    fxd[1] <- TRUE
-    if(!is.null(endlonlat)) {
-      xs[n,] <- endlonlat
-      fxd[n] <- TRUE
-    }
-    for(i in seq_len(NROW(fixed))) {
-      k <- fixed$index[i]
-      fxd[k] <- TRUE
-      xs[k,] <- c(fixed$lon[i],fixed$lat[i])
-    }
-    ## Translate landmask specification
-    if(is.logical(do.test.land)) {
-      do.test.land <- if(do.test.land) landmask_init() else function(tm,pt) TRUE
-    }
-    ## Use variant algorithm.
-    surrogateAR(arfit,xs,1:nrow(xs),fxd,do.test.land,random.rotation,return.all.points)
-  }
-}
-
-
-
-##' @rdname surrogate_arsimulate
-##' @importFrom geosphere destPoint
-##' @export
-surrogate_arsimulate0 <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
-                                 do.test.land=TRUE,random.rotation=c(-pi,pi),
-                                 verbose=0,return.all.points=FALSE,intermediate.tries=10) {
-
-  if(!is.null(endlonlat) && !is.null(fixed))
-    stop("only one of fixed or endlonlat can be supplied")
-
-  ## change to inbuilt land-mask
-  if(is.logical(do.test.land) && do.test.land)
-    do.test.land <- landmask_init()
-
-  if (!is.null(random.rotation)) {
-    this.rotation <- 0
-    ## apply rotation to arfit parms
-    for (ntries in 1:100) {
-      rotate.by <- runif(1,random.rotation[1],random.rotation[2])
-      if(verbose>0) cat(sprintf("Rotating track by %.1f degrees\n",rotate.by/pi*180))
-      Rm <- matrix(c(cos(rotate.by),-sin(rotate.by),sin(rotate.by),cos(rotate.by)),nrow=2,byrow=TRUE)
-      rotated.arfit <- arfit
-      rotated.arfit$ar <- Rm%*%matrix(arfit$ar,2,2)%*%t(Rm)
-      rotated.arfit$var.pred <- Rm%*%as.matrix(arfit$var.pred)%*%t(Rm)
-      rotated.arfit$x.mean <- as.vector(arfit$x.mean)%*%t(Rm)
-      ## call simulate on rotated parms
-      simtrack <- Recall(arfit=rotated.arfit,n=n,startlonlat=startlonlat,fixed=fixed,endlonlat=endlonlat,
-                         do.test.land=do.test.land,random.rotation=NULL,
-                         verbose=verbose,return.all.points=return.all.points,intermediate.tries=intermediate.tries)
-      if (dim(simtrack)[1]>0) {
-        return(simtrack)
-      }
-    }
-    return(simtrack)
-  }
-  ## convert to "fixed" format
-  if(!is.null(endlonlat)) {
-    endlonlat <- as.numeric(endlonlat)
-    fixed <- data.frame(index=n,lon=endlonlat[1],lat=endlonlat[2])
-  }
-
-  ## add starting point as a fixed point
-  if(is.null(fixed)) {
-    fixed <- data.frame(index=1,lon=startlonlat[1],lat=startlonlat[2])
-  } else {
-    if(is.matrix(fixed)) {
-      fixed <- data.frame(index=fixed[,1],lon=fixed[,2],lat=fixed[,3])
-    }
-    fixed <- rbind(data.frame(index=1,lon=startlonlat[1],lat=startlonlat[2]),fixed)
-  }
-  ## ensure ascending order by index
-  fixed <- fixed[order(fixed$index),]
-
-  A <- matrix(arfit$ar,2,2,byrow=FALSE)
-  fitted.var <- as.matrix(arfit$var.pred)
-  fitted.mean <- as.vector(arfit$x.mean)
-  tempchol <- chol(fitted.var) ## calculate chol decomposition once
-  xsim <- matrix(0,n,2)
-  ## burnin for 100 steps
-  xsim[1,] <- fitted.mean
-  for (k in 1:100) {
-    thisrand <- drop(rnorm(2) %*% tempchol)
-    xsim[1,] <- t(A %*% (xsim[1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
-  }
-
-  simtrack <- matrix(0,1,3)
-  simtrack[1,1:2] <- as.numeric(startlonlat)
-  simtrack[1,3] <- 1 ## valid
-  sidx <- 1 ## pointer into simtrack matrix of last valid point
-  for (k in 2:n) {
-    ## k is index into xsim, the model of x- and y- step lengths/speeds
-    point.okay <- TRUE
-    if (verbose>0) cat(sprintf("Step %d, current location is %.3f, %.3f\n",k,simtrack[sidx,1],simtrack[sidx,2]))
-    for (land.tries in 1:intermediate.tries) {
-      thisrand <- matrix(rnorm(2) %*% tempchol,nrow=1)
-      xsim[k,]  <- t(A %*% (xsim[k-1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
-      ## calculate track point from steps
-      tempx <- destPoint(simtrack[sidx,1:2],90,xsim[k,1]) # x step
-      tempx[1] <- (tempx[1]+180)%%360-180 ## ensure longitude is in range -180 to 180
-      tempy <- destPoint(simtrack[sidx,1:2],0,xsim[k,2]) # y step
-      ## note that destPoint will handle the case where a step crosses 90S or 90N
-      simtrack <- rbind(simtrack,c(tempx[1],tempy[2],NA)) ## 3rd entry (valid) is NA for now
-      ## as we get closer to the next fixed point, increasingly nudge the random point towards the designated fixed location
-      next_fixed <- if(any(fixed$index>=k)) which.max(fixed$index>=k) else NA
-      if(verbose>1) cat(sprintf("  proposed point %d is at %.3f, %.3f\n",k,simtrack[nrow(simtrack),1],simtrack[nrow(simtrack),2]))
-      if(!is.na(next_fixed)) {
-        if(verbose>1) cat(sprintf("    the next fixed point is at %.3f, %.3f in %d steps time\n",fixed$lon[next_fixed],fixed$lat[next_fixed],fixed$index[next_fixed]-k))
-        ## next_fixed is row index into fixed
-        a <- diag(1/(fixed$index[next_fixed]-k+1),2)
-        simtrack[nrow(simtrack),1:2] <- simtrack[nrow(simtrack),1:2]+a%*%(c(fixed$lon[next_fixed],fixed$lat[next_fixed])-simtrack[nrow(simtrack),1:2])
-        if (verbose>1) cat(sprintf("    the proposed point has been nudged to %.3f, %.3f because of the next fixed point\n",simtrack[nrow(simtrack),1],simtrack[nrow(simtrack),2]))
-      }
-      if(is.function(do.test.land)) {
-        if(is.na(next_fixed) || fixed$index[next_fixed]!=k) {
-          point.okay=do.test.land(0,simtrack[nrow(simtrack),])
-        } else {
-          if(verbose>1) cat("    not checking land-mask for this point, because it is a fixed point.\n")
-        }
-      }
-      if(point.okay) {
-        if (verbose>1 & is.function(do.test.land)) cat(sprintf("    this proposed point does not lie on land, accepting\n"))
-        simtrack[nrow(simtrack),3] <- 1
-        sidx=nrow(simtrack) ## update pointer to valid location
-        break
-      } else {
-        if (verbose>1) cat(sprintf("    this proposed point lies on land\n"))
-        simtrack[nrow(simtrack),3] <- 0
-      }
-    }
-    if(!point.okay) {
-      ## could not find a valid point at this step: give up
-      if (verbose>0) cat(sprintf("  could not find valid point, abandoning this track and starting again\n"))
-      simtrack <- NULL
-      break
-    }
-  }
-  if(return.all.points) {
-    data.frame(lon=simtrack[,1],lat=simtrack[,2],valid=as.logical(simtrack[,3]))
-  } else {
-    data.frame(lon=simtrack[simtrack[,3]>0,1],lat=simtrack[simtrack[,3]>0,2])
-  }
-}
-
 
 ##' Generate new tracks from a VAR(1)
 ##'
@@ -610,3 +389,226 @@ surrogateCrawl <- function(model,xs,ts=1:nrow(xs),
   }
   NULL
 }
+
+
+##' @rdname surrogateARModel
+##' @export
+surrogate_arfit <- function(lonlat) {
+  warning("surrogate_arfit is deprecated and will be removed: ",
+          "use surrogateARModel().")
+  surrogateARModel(lonlat)
+}
+
+
+##' Simulate track from fitted vector autoregressive model
+##'
+##' Note that land masking uses a built-in land mask image, and it
+##' only covers the southern hemisphere. A future version will do
+##' something about this.
+##'
+##' @title Simulated VAR(1) tracks
+##' @param arfit fitted object of class "ar" as returned by
+##' \code{\link{surrogate_arfit}}
+##' @param n number of points to simulate
+##' @param startlonlat 2-element vector of starting longitude and latitude
+##' @param fixed a dataframe or matrix in which the first column is
+##' the index (from 1:n) of each fixed point, and the second and third
+##' columns give the associated longitude and latitude
+##' @param endlonlat a 2-element vector with ending longitude and
+##' latitude. If NULL, no end constraint is imposed except for land
+##' masking (if land masking is used). This is a simple way of
+##' imposing a return-to-starting-location constraint; for more
+##' complex constraints use the \code{fixed} argument
+##' @param do.test.land a logical or function. If TRUE, use the
+##' included land mask to avoid land. Alternatively, a function can be
+##' passed that returns TRUE (point is okay, not on land) or FALSE
+##' (point is on land) for a given lon,lat. Note that land masking is
+##' ignored for fixed points. Note also that it is possible to create
+##' a sitation where tracks are difficult or impossible to simulate,
+##' because a fixed point is sufficiently far onto land that the track
+##' cannot reach it.
+##' @param random.rotation a 2-element vector giving the range of
+##' the rotation to apply to the randomized track (values in
+##' radians). use \code{random.rotation=NULL} for no such rotation. The
+##' angle can be restricted using
+##' \code{random.rotation=c(min.angle,max.angle)} - this may speed up
+##' computation by avoiding impossible angles (e.g. tracks over a land
+##' mass)
+##' @param verbose an integer 0-3, if >0 spit out extra information
+##' which may be helpful if things don't work as expected. Larger
+##' numbers mean more output
+##' @param return.all.points if TRUE, return points that were proposed
+##' but rejected due to land masking (may be helpful for debugging). If
+##' TRUE, the returned data.frame will have an extra column named
+##' "valid"
+##' @param intermediate.tries when land-masking, try how many times to
+##' find a valid point at each step before giving up and starting
+##' again? Higher values may improve overall run-time, but too-high
+##' values may yield tracks that aren't a good representation of the
+##' fitted model
+##' @param original if \code{TRUE}, use the original algorithm.
+##' @return 2 or 3 column dataframe with the longitude and latitude
+##' of simulated track points (and point validity, if
+##' return.all.points is TRUE)
+##' @author Ben Raymond
+##' @export
+surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
+                                 do.test.land=TRUE,random.rotation=c(-pi,pi),
+                                 verbose=0,return.all.points=FALSE,intermediate.tries=10,
+                                 original=FALSE) {
+  if(original) {
+    xs <- surrogate_arsimulate0(arfit,n,startlonlat,fixed,endlonlat,do.test.land,
+                                random.rotation,verbose,return.all.points,intermediate.tries)
+    list(ts=1:nrow(xs),xs=xs)
+  } else {
+    warning("surrogate_arsimulate is deprecated and will be removed: ",
+            "use surrogateAR().")
+    if(verbose>0) warning("Only the original surrogate_arsimulate supports verbose")
+    ## Translate fixed point specification
+    xs <- matrix(NA,n,2)
+    fxd <- logical(n)
+    xs[1,] <- startlonlat
+    fxd[1] <- TRUE
+    if(!is.null(endlonlat)) {
+      xs[n,] <- endlonlat
+      fxd[n] <- TRUE
+    }
+    for(i in seq_len(NROW(fixed))) {
+      k <- fixed$index[i]
+      fxd[k] <- TRUE
+      xs[k,] <- c(fixed$lon[i],fixed$lat[i])
+    }
+    ## Translate landmask specification
+    if(is.logical(do.test.land)) {
+      do.test.land <- if(do.test.land) landmask_init() else function(tm,pt) TRUE
+    }
+    ## Use variant algorithm.
+    surrogateAR(arfit,xs,1:nrow(xs),fxd,do.test.land,random.rotation,return.all.points)
+  }
+}
+
+
+
+##' @rdname surrogate_arsimulate
+##' @importFrom geosphere destPoint
+##' @export
+surrogate_arsimulate0 <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
+                                 do.test.land=TRUE,random.rotation=c(-pi,pi),
+                                 verbose=0,return.all.points=FALSE,intermediate.tries=10) {
+
+  if(!is.null(endlonlat) && !is.null(fixed))
+    stop("only one of fixed or endlonlat can be supplied")
+
+  ## change to inbuilt land-mask
+  if(is.logical(do.test.land) && do.test.land)
+    do.test.land <- landmask_init()
+
+  if (!is.null(random.rotation)) {
+    this.rotation <- 0
+    ## apply rotation to arfit parms
+    for (ntries in 1:100) {
+      rotate.by <- runif(1,random.rotation[1],random.rotation[2])
+      if(verbose>0) cat(sprintf("Rotating track by %.1f degrees\n",rotate.by/pi*180))
+      Rm <- matrix(c(cos(rotate.by),-sin(rotate.by),sin(rotate.by),cos(rotate.by)),nrow=2,byrow=TRUE)
+      rotated.arfit <- arfit
+      rotated.arfit$ar <- Rm%*%matrix(arfit$ar,2,2)%*%t(Rm)
+      rotated.arfit$var.pred <- Rm%*%as.matrix(arfit$var.pred)%*%t(Rm)
+      rotated.arfit$x.mean <- as.vector(arfit$x.mean)%*%t(Rm)
+      ## call simulate on rotated parms
+      simtrack <- Recall(arfit=rotated.arfit,n=n,startlonlat=startlonlat,fixed=fixed,endlonlat=endlonlat,
+                         do.test.land=do.test.land,random.rotation=NULL,
+                         verbose=verbose,return.all.points=return.all.points,intermediate.tries=intermediate.tries)
+      if (dim(simtrack)[1]>0) {
+        return(simtrack)
+      }
+    }
+    return(simtrack)
+  }
+  ## convert to "fixed" format
+  if(!is.null(endlonlat)) {
+    endlonlat <- as.numeric(endlonlat)
+    fixed <- data.frame(index=n,lon=endlonlat[1],lat=endlonlat[2])
+  }
+
+  ## add starting point as a fixed point
+  if(is.null(fixed)) {
+    fixed <- data.frame(index=1,lon=startlonlat[1],lat=startlonlat[2])
+  } else {
+    if(is.matrix(fixed)) {
+      fixed <- data.frame(index=fixed[,1],lon=fixed[,2],lat=fixed[,3])
+    }
+    fixed <- rbind(data.frame(index=1,lon=startlonlat[1],lat=startlonlat[2]),fixed)
+  }
+  ## ensure ascending order by index
+  fixed <- fixed[order(fixed$index),]
+
+  A <- matrix(arfit$ar,2,2,byrow=FALSE)
+  fitted.var <- as.matrix(arfit$var.pred)
+  fitted.mean <- as.vector(arfit$x.mean)
+  tempchol <- chol(fitted.var) ## calculate chol decomposition once
+  xsim <- matrix(0,n,2)
+  ## burnin for 100 steps
+  xsim[1,] <- fitted.mean
+  for (k in 1:100) {
+    thisrand <- drop(rnorm(2) %*% tempchol)
+    xsim[1,] <- t(A %*% (xsim[1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
+  }
+
+  simtrack <- matrix(0,1,3)
+  simtrack[1,1:2] <- as.numeric(startlonlat)
+  simtrack[1,3] <- 1 ## valid
+  sidx <- 1 ## pointer into simtrack matrix of last valid point
+  for (k in 2:n) {
+    ## k is index into xsim, the model of x- and y- step lengths/speeds
+    point.okay <- TRUE
+    if (verbose>0) cat(sprintf("Step %d, current location is %.3f, %.3f\n",k,simtrack[sidx,1],simtrack[sidx,2]))
+    for (land.tries in 1:intermediate.tries) {
+      thisrand <- matrix(rnorm(2) %*% tempchol,nrow=1)
+      xsim[k,]  <- t(A %*% (xsim[k-1,]-fitted.mean))+fitted.mean+thisrand ## simulated dx,dy for this time step
+      ## calculate track point from steps
+      tempx <- destPoint(simtrack[sidx,1:2],90,xsim[k,1]) # x step
+      tempx[1] <- (tempx[1]+180)%%360-180 ## ensure longitude is in range -180 to 180
+      tempy <- destPoint(simtrack[sidx,1:2],0,xsim[k,2]) # y step
+      ## note that destPoint will handle the case where a step crosses 90S or 90N
+      simtrack <- rbind(simtrack,c(tempx[1],tempy[2],NA)) ## 3rd entry (valid) is NA for now
+      ## as we get closer to the next fixed point, increasingly nudge the random point towards the designated fixed location
+      next_fixed <- if(any(fixed$index>=k)) which.max(fixed$index>=k) else NA
+      if(verbose>1) cat(sprintf("  proposed point %d is at %.3f, %.3f\n",k,simtrack[nrow(simtrack),1],simtrack[nrow(simtrack),2]))
+      if(!is.na(next_fixed)) {
+        if(verbose>1) cat(sprintf("    the next fixed point is at %.3f, %.3f in %d steps time\n",fixed$lon[next_fixed],fixed$lat[next_fixed],fixed$index[next_fixed]-k))
+        ## next_fixed is row index into fixed
+        a <- diag(1/(fixed$index[next_fixed]-k+1),2)
+        simtrack[nrow(simtrack),1:2] <- simtrack[nrow(simtrack),1:2]+a%*%(c(fixed$lon[next_fixed],fixed$lat[next_fixed])-simtrack[nrow(simtrack),1:2])
+        if (verbose>1) cat(sprintf("    the proposed point has been nudged to %.3f, %.3f because of the next fixed point\n",simtrack[nrow(simtrack),1],simtrack[nrow(simtrack),2]))
+      }
+      if(is.function(do.test.land)) {
+        if(is.na(next_fixed) || fixed$index[next_fixed]!=k) {
+          point.okay=do.test.land(0,simtrack[nrow(simtrack),])
+        } else {
+          if(verbose>1) cat("    not checking land-mask for this point, because it is a fixed point.\n")
+        }
+      }
+      if(point.okay) {
+        if (verbose>1 & is.function(do.test.land)) cat(sprintf("    this proposed point does not lie on land, accepting\n"))
+        simtrack[nrow(simtrack),3] <- 1
+        sidx=nrow(simtrack) ## update pointer to valid location
+        break
+      } else {
+        if (verbose>1) cat(sprintf("    this proposed point lies on land\n"))
+        simtrack[nrow(simtrack),3] <- 0
+      }
+    }
+    if(!point.okay) {
+      ## could not find a valid point at this step: give up
+      if (verbose>0) cat(sprintf("  could not find valid point, abandoning this track and starting again\n"))
+      simtrack <- NULL
+      break
+    }
+  }
+  if(return.all.points) {
+    data.frame(lon=simtrack[,1],lat=simtrack[,2],valid=as.logical(simtrack[,3]))
+  } else {
+    data.frame(lon=simtrack[simtrack[,3]>0,1],lat=simtrack[simtrack[,3]>0,2])
+  }
+}
+
