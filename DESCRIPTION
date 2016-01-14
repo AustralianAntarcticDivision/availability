@@ -1,8 +1,8 @@
 Package: availability
 Type: Package
 Title: Estimating geographic space available to animals based on telemetry data
-Version: 0.1
-Date: 2016-01-13
+Version: 0.11
+Date: 2016-01-14
 Author: Ben Raymond, Simon Wotherspoon
 Maintainer: Ben Raymond <ben.raymond@aad.gov.au>
 Description: Estimating geographic space available to animals based on

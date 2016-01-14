@@ -20,7 +20,7 @@ etopoMask(basename = "ETOPO1_Bed_c_geotiff", path = ".", tmp = path,
 a logical indicating whether the point is land or sea.
 }
 \description{
-A land mask based on ETOPO1
+A land mask based on the full ETOPO1 dataset
 }
 \details{
 Generate a land mask function based on ETOPO1 topography. The
