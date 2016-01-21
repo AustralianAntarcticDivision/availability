@@ -19,8 +19,8 @@ gshhsMask <- function(res=0.1) {
     }
     land.mask=readPNG(system.file("extdata",paste0("land_mask_gshhs-",res,".png"),package="availability")) ## 0=land, 1=ocean
     if (length(dim(land.mask))>1) { land.mask=land.mask[,,1] }
-    land.lon=seq(from=-180,to=180,length.out=dim(land.mask)[2])
-    land.lat=seq(from=90,to=-90,length.out=dim(land.mask)[1])
+    land.lon=seq(from=-180+res/2,to=180-res/2,length.out=dim(land.mask)[2])
+    land.lat=seq(from=90-res/2,to=-90+res/2,length.out=dim(land.mask)[1])
     function(tm,pt) {
         lonidx=which.min(abs(land.lon-((pt[1]+180)%%360-180)))
         latidx=which.min(abs(land.lat-pt[2]))
