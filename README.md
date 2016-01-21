@@ -31,5 +31,8 @@ model=surrogateCrawlModel(fit,dt)
 ## and finally simulate the track
 stcrw=surrogateCrawl(model,as.matrix(pr[,c("mu.x","mu.y","nu.x","nu.y")]),pr$date)
 ```
+
+More detailed usage examples will follow soon.
+
 ## References
 [1] Raymond B *et al.* (2014) Important marine habitat off East Antarctica revealed by two decades of multi-species predator tracking. *Ecography* **38**:121–129. [doi:10.1111/ecog.01021](http://dx.doi.org/10.1111/ecog.01021)
