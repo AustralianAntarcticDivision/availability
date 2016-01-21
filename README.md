@@ -19,7 +19,7 @@ arf=surrogateARModel(realtrack) ## fit AR model to track
 st=surrogateAR(arf,realtrack) ## simulate new track
 ```
 
-Or to fit using the crawl-based track simulator:
+Or using the crawl-based track simulator:
 ```{r}
 library(availability)
 library(crawl)
