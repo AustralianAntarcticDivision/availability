@@ -16,7 +16,6 @@
 ##' @return A dataframe with columns
 ##' \item{\code{lon}}{the longitude of the randomized track}
 ##' \item{\code{lat}}{the latitude of the randomized track}
-##' @author Ben Raymond
 ##' @export
 randomize_track <- function(lonlat,rotate=c(-pi,pi),reorder=FALSE) {
   ## distance and final bearing for each step
@@ -44,7 +43,6 @@ randomize_track <- function(lonlat,rotate=c(-pi,pi),reorder=FALSE) {
 ##' @return A dataframe with columns
 ##' \item{\code{lon}}{the longitude of the randomized track}
 ##' \item{\code{lat}}{the latitude of the randomized track}
-##' @author Ben Raymond
 calc_distbearing <- function(lonlat) {
   nr <- nrow(lonlat)
   dst <- distVincentySphere(lonlat[-nr,],lonlat[-1,])
@@ -65,7 +63,6 @@ calc_distbearing <- function(lonlat) {
 ##' latitude of each point
 ##' @return An object of class "ar"
 ##' @seealso \code{\link{ar}}, \code{\link{surrogateAR}}
-##' @author Ben Raymond
 ##' @export
 surrogateARModel <- function(lonlat) {
 
@@ -450,7 +447,6 @@ surrogate_arfit <- function(lonlat) {
 ##' @return 2 or 3 column dataframe with the longitude and latitude
 ##' of simulated track points (and point validity, if
 ##' return.all.points is TRUE)
-##' @author Ben Raymond
 ##' @export
 surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
                                  do.test.land=TRUE,random.rotation=c(-pi,pi),
