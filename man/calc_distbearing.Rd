@@ -22,7 +22,4 @@ points along track.
 \details{
 This is an internal function used by \code{\link{randomize_track}}.
 }
-\author{
-Ben Raymond
-}
 

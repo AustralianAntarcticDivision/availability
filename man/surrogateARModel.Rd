@@ -23,9 +23,6 @@ Fit first-order vector-autoregressive model to track
 This function fits the vector AR(1) model used as the \code{model}
 argument to \code{\link{surrogateAR}}.
 }
-\author{
-Ben Raymond
-}
 \seealso{
 \code{\link{ar}}, \code{\link{surrogateAR}}
 }

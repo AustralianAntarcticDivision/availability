@@ -78,7 +78,4 @@ Note that land masking uses a built-in land mask image, and it
 only covers the southern hemisphere. A future version will do
 something about this.
 }
-\author{
-Ben Raymond
-}
 
