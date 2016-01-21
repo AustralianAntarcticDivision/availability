@@ -7,7 +7,7 @@
 #' @param res numeric: the spatial resolution of the mask, in degrees (either 0.1 or 0.05)
 #' @return function that returns a logical indicating whether the point is at sea (TRUE) or on land (FALSE)
 #' @seealso \code{\link{surrogateAR}}
-#' @references Wessel, P., and W. H. F. Smith, A Global Self-consistent, Hierarchical, High-resolution Shoreline Database, J. Geophys. Res., 101, #B4, pp. 8741-8743, 1996. \link{https://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html}
+#' @references Wessel, P., and W. H. F. Smith, A Global Self-consistent, Hierarchical, High-resolution Shoreline Database, J. Geophys. Res., 101, #B4, pp. 8741-8743, 1996. \url{https://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html}
 #' @examples
 #' mask  <- gshhsMask() ## initialize land mask function
 #' mask(0,c(100,-65)) ## test point lon,lat
@@ -30,9 +30,7 @@ gshhsMask <- function(res=0.1) {
 
 ##' @rdname gshhsMask
 ##' @export
-landmask_init <- function(...) {
-    gshhsMask(...)
-}
+landmask_init <- gshhsMask
 
 ## slightly faster, but has unexpected behaviour at edges, so don't use for now
 ##landmask_init=function() {
