@@ -5,7 +5,7 @@ Estimating geographic space available to animals based on telemetry data.
 ## Installation:
 ```
 library(devtools)
-install_github("AustralianAntarcticDataCentre/availability")
+install_github("AustralianAntarcticDataCentre/availability",build_vignettes=TRUE)
 ```
 
 ## Example usage:
@@ -32,7 +32,7 @@ model=surrogateCrawlModel(fit,dt)
 stcrw=surrogateCrawl(model,as.matrix(pr[,c("mu.x","mu.y","nu.x","nu.y")]),pr$date)
 ```
 
-More detailed usage examples are in the package vignette, which is also [available as a PDF](./vignettes/availability.pdf?raw=true).
+More detailed usage examples are in the package vignette (do `vignette("availability")` in R, provided that you did `install_github(...,build_vignettes=TRUE)`). The vignette is also [available as a PDF here](./vignettes/availability.pdf?raw=true).
 
 ## References
 [1] Raymond B *et al.* (2014) Important marine habitat off East Antarctica revealed by two decades of multi-species predator tracking. *Ecography* **38**:121–129. [doi:10.1111/ecog.01021](http://dx.doi.org/10.1111/ecog.01021)
