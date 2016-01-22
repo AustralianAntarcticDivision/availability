@@ -3,7 +3,7 @@
 Estimating geographic space available to animals based on telemetry data.
 
 ## Installation:
-```
+```{r}
 library(devtools)
 install_github("AustralianAntarcticDataCentre/availability",build_vignettes=TRUE)
 ```
