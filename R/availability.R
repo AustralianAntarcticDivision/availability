@@ -131,6 +131,9 @@ surrogateAR <- function(model,xs,ts=1:nrow(xs),
                         point.check=function(tm,pt) TRUE,
                         random.rotation=c(-pi,pi),partial=FALSE) {
 
+    if (is.data.frame(xs)) {
+        xs <- as.matrix(xs)
+    }
   xs <- unname(xs[,1:2,drop=FALSE])
   n <- nrow(xs)
 
