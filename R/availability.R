@@ -365,7 +365,7 @@ surrogateCrawl <- function(model,xs,ts=1:nrow(xs),
       ## point.check/rejection loop
       for(r in 1:100) {
         x <- drop(backsolve(R,backsolve(R,b,transpose=T)+rnorm(length(b))))
-        if(point.check(ts[k],x[1:2])) break
+        if(fixed[k] || point.check(ts[k],x[1:2])) break
         ## If fail, return last fixed point
         if(r==100) return(k0)
       }
