@@ -187,8 +187,12 @@ surrogateAR <- function(model,xs,ts=1:nrow(xs),
           ## Trial x - take step in lon then lat.
           x1 <- as.vector(destPoint(destPoint(x,90,z1[1]+mu[1]),0,z1[2]+mu[2]))
           ## Nudge - this seems a little aggressive
-          if(length(kfixed))
-            x1 <- x1 + (xs[kfixed[1],]-x1)/(kfixed[1]-k+1)
+          if(length(kfixed)) {
+              this_nudge <- xs[kfixed[1],]-x1
+              this_nudge[1] <- angle_normalise(this_nudge[1]/180*pi)/pi*180
+              x1 <- x1 + (this_nudge)/(kfixed[1]-k+1)
+              #x1 <- x1 + (xs[kfixed[1],]-x1)/(kfixed[1]-k+1)
+          }
           ## Test current candidate
           if(point.check(ts[k],x1)) {
             ## Accept candidate
@@ -611,3 +615,5 @@ surrogate_arsimulate0 <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
   }
 }
 
+
+angle_normalise=function(x) { (x+pi)%%(2*pi)-pi } ## normalize angle to range [-pi,pi)
