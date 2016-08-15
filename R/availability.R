@@ -212,17 +212,21 @@ surrogateAR <- function(model,xs,ts=1:nrow(xs),
   }
 
   ## Try 100 rotations of the model
-  for(i in 1:100) {
+  for(roti in 1:100) {
     theta <- if(is.null(random.rotation)) 0 else runif(1,random.rotation[1],random.rotation[2])
     model0 <- rotateVAR1(model,theta)
     A <- unname(model0$ar[1,,])
     U <- chol(unname(model0$var.pred))
     mu <- as.vector(model0$x.mean)
     k <- 1
+    fails <- 0
     for(i in 1:50) {
-      k <- if(i < 25) sample(k) else sample(1)
-      if(k>n) return(list(xs=xs,ts=ts))
+        knew <- if(i < 25) sample(k) else sample(1)
+        if (knew==k) fails <- fails+1 ## failed to find valid new point
+        k <- knew
+        if(k>n) return(list(xs=xs,ts=ts))
     }
+    if (fails==50) warning("Failed to find acceptable point at step ",k,". If surrogateAR fails to return a track, this might indicate a location from which it is not possible to step to another, valid location.")
   }
   ## Return partial track or NULL
   if(partial) {
