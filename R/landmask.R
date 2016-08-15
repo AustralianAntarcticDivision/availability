@@ -22,8 +22,8 @@ gshhsMask <- function(res=0.1) {
     land.lon=seq(from=-180+res/2,to=180-res/2,length.out=dim(land.mask)[2])
     land.lat=seq(from=90-res/2,to=-90+res/2,length.out=dim(land.mask)[1])
     function(tm,pt) {
-        lonidx=which.min(abs(land.lon-((pt[1]+180)%%360-180)))
-        latidx=which.min(abs(land.lat-pt[2]))
+        lonidx=which.min(abs(land.lon-((pt[[1]]+180)%%360-180)))
+        latidx=which.min(abs(land.lat-pt[[2]]))
         land.mask[latidx,lonidx]==1
     }
 }
