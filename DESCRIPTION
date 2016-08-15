@@ -1,7 +1,7 @@
 Package: availability
 Type: Package
 Title: Estimating geographic space available to animals based on telemetry data
-Version: 0.12
+Version: 0.12.1
 Date: 2016-01-21
 Author: Ben Raymond, Simon Wotherspoon, Ryan Reisinger
 Maintainer: Ben Raymond <ben.raymond@aad.gov.au>
@@ -16,7 +16,7 @@ Imports:
 Suggests:
     R.rsp,
     crawl
-License: Mozilla Public License 2.0
+License: MPL | file LICENSE
 LazyLoad: yes
 RoxygenNote: 5.0.1
 VignetteBuilder: R.rsp
