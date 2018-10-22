@@ -11,4 +11,3 @@ Estimating geographic space available to animals based on telemetry data
 \author{
 Ben Raymond \email{ben.raymond@aad.gov.au}, Simon Wotherspoon, Ryan Reisinger
 }
-

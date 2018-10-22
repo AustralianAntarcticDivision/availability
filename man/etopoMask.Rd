@@ -37,4 +37,3 @@ The \code{land} argument determines whether the mask function
 returns \code{TRUE} or \code{FALSE} for land. The mask is constant
 and the \code{tm} argument to the mask is ignored.
 }
-

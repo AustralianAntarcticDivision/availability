@@ -4,8 +4,8 @@
 \alias{surrogateCrawl}
 \title{Regressive bridge sampler}
 \usage{
-surrogateCrawl(model, xs, ts = 1:nrow(xs), fixed = rep(c(TRUE, FALSE, TRUE),
-  c(1, nrow(xs) - 2, 1)), point.check = function(tm, pt) TRUE,
+surrogateCrawl(model, xs, ts = 1:nrow(xs), fixed = rep(c(TRUE, FALSE,
+  TRUE), c(1, nrow(xs) - 2, 1)), point.check = function(tm, pt) TRUE,
   Verr = diag(c(1e-04, 1e-04, 0.1, 0.1)), partial = FALSE)
 }
 \arguments{
@@ -59,4 +59,3 @@ the ocean by supplying a \code{point.check} function that compares
 the state to a land mask and returns \code{FALSE} for states
 corresponding to locations that fall on land.
 }
-

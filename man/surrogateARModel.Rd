@@ -26,4 +26,3 @@ argument to \code{\link{surrogateAR}}.
 \seealso{
 \code{\link{ar}}, \code{\link{surrogateAR}}
 }
-

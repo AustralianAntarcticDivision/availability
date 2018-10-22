@@ -5,13 +5,15 @@
 \alias{surrogate_arsimulate0}
 \title{Simulated VAR(1) tracks}
 \usage{
-surrogate_arsimulate(arfit, n, startlonlat, fixed = NULL, endlonlat = NULL,
-  do.test.land = TRUE, random.rotation = c(-pi, pi), verbose = 0,
-  return.all.points = FALSE, intermediate.tries = 10, original = FALSE)
+surrogate_arsimulate(arfit, n, startlonlat, fixed = NULL,
+  endlonlat = NULL, do.test.land = TRUE, random.rotation = c(-pi,
+  pi), verbose = 0, return.all.points = FALSE,
+  intermediate.tries = 10, original = FALSE)
 
-surrogate_arsimulate0(arfit, n, startlonlat, fixed = NULL, endlonlat = NULL,
-  do.test.land = TRUE, random.rotation = c(-pi, pi), verbose = 0,
-  return.all.points = FALSE, intermediate.tries = 10)
+surrogate_arsimulate0(arfit, n, startlonlat, fixed = NULL,
+  endlonlat = NULL, do.test.land = TRUE, random.rotation = c(-pi,
+  pi), verbose = 0, return.all.points = FALSE,
+  intermediate.tries = 10)
 }
 \arguments{
 \item{arfit}{fitted object of class "ar" as returned by
@@ -78,4 +80,3 @@ Note that land masking uses a built-in land mask image, and it
 only covers the southern hemisphere. A future version will do
 something about this.
 }
-

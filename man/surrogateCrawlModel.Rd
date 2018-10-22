@@ -33,4 +33,3 @@ nu.  The parametrization is defined as in the crawl source not the
 paper, which differs by a factor of \eqn{\beta^{2}} in the
 definition of \eqn{\sigma^{2}}.
 }
-

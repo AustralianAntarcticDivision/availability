@@ -31,4 +31,3 @@ Wessel, P., and W. H. F. Smith, A Global Self-consistent, Hierarchical, High-res
 \seealso{
 \code{\link{surrogateAR}}
 }
-

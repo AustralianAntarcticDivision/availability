@@ -4,8 +4,8 @@
 \alias{surrogateAR}
 \title{VAR bridge sampler}
 \usage{
-surrogateAR(model, xs, ts = 1:nrow(xs), fixed = rep(c(TRUE, FALSE, TRUE),
-  c(1, nrow(xs) - 2, 1)), point.check = function(tm, pt) TRUE,
+surrogateAR(model, xs, ts = 1:nrow(xs), fixed = rep(c(TRUE, FALSE,
+  TRUE), c(1, nrow(xs) - 2, 1)), point.check = function(tm, pt) TRUE,
   random.rotation = c(-pi, pi), partial = FALSE)
 }
 \arguments{
@@ -61,4 +61,3 @@ the ocean by supplying a \code{point.check} function that compares
 the state to a land mask and returns \code{FALSE} for states
 corresponding to locations that fall on land.
 }
-

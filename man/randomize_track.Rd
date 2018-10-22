@@ -31,4 +31,3 @@ reconstructs a new track by randomly perturbing the bearings of
 each increment, and otpionally, randomly reordering the
 increments.
 }
-
