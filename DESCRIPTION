@@ -1,11 +1,11 @@
 Package: availability
 Type: Package
 Title: Estimating geographic space available to animals based on telemetry data
-Version: 0.13.0
+Version: 0.13.1
 Authors@R: c(person("Ben", "Raymond", email = "ben.raymond@aad.gov.au", role = c("aut", "cre")),
 	   person("Simon", "Wotherspoon", role = "aut"),
+	   person("Ian", "Jonsen", role = "aut"),
 	   person("Ryan", "Reisinger", role = "aut"))
-Maintainer: Ben Raymond <ben.raymond@aad.gov.au>
 Description: Estimating geographic space available to animals based on telemetry data.
 URL: https://github.com/AustralianAntarcticDataCentre/availability
 BugReports: https://github.com/AustralianAntarcticDataCentre/availability/issues
@@ -17,9 +17,14 @@ Imports:
     testthat,
     png
 Suggests:
-    R.rsp,
-    crawl
+    argosfilter,
+    crawl,
+    knitr,
+    geosphere,
+    ggplot2,
+    maptools,
+    rmarkdown
 License: MPL | file LICENSE
 LazyLoad: yes
 RoxygenNote: 6.1.0
-VignetteBuilder: R.rsp
+VignetteBuilder: knitr
