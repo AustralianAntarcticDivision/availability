@@ -52,7 +52,9 @@ stcrw <- surrogateCrawl(model, as.matrix(pr[, c("mu.x", "mu.y", "nu.x", "nu.y")]
 ```
 
 ## Vignette
-More detailed usage examples are in the [package vignette](https://australianantarcticdatacentre.github.io/availability).
+More detailed usage examples are in the [package vignette](https://australianantarcticdatacentre.github.io/availability/articles/availability.html).
 
 ## References
 [1] Raymond B *et al.* (2015) Important marine habitat off East Antarctica revealed by two decades of multi-species predator tracking. *Ecography*. [doi:10.1111/ecog.01021](https://doi.org/10.1111/ecog.01021)
+
+[2] Reisinger RR *et al* (2018) Habitat modelling of tracking data from multiple marine top predators reveals important habitat in the Southern Indian Ocean. *Diversity and Distributions*. [doi:10.1111/ddi.12702](https://doi.org/10.1111/ddi.12702)
