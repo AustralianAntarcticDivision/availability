@@ -27,6 +27,7 @@ st <- surrogateAR(arf, realtrack) ## simulate new track
 ```
 
 Or using the crawl-based track simulator:
+
 ```{r}
 library(crawl)
 
@@ -50,6 +51,11 @@ model <- surrogateCrawlModel(fit, time_step)
 ## and finally simulate the track
 stcrw <- surrogateCrawl(model, as.matrix(pr[, c("mu.x", "mu.y", "nu.x", "nu.y")]), pr$date)
 ```
+
+## Crawl note
+
+Please note: this package was developed with version 1 of the `crawl` package. It should also work with `crawl` v2, but note that v2 only works with projected coordinates (not longitude and latitude).
+
 
 ## Vignette
 More detailed usage examples are in the [package vignette](https://australianantarcticdatacentre.github.io/availability/articles/availability.html).

@@ -25,6 +25,8 @@ For application examples, see e.g. Raymond et al. (2015), Reisinger et al. (2018
 
 Load the availability package, and some others that we'll use:
 
+NOTE: these examples require `crawl` v1, because the track coordinates are not projected (they are in longitude and latitude). Examples will be updated soon for `crawl` v2.
+
 ```{r packages}
 library(availability)
 library(argosfilter)
