@@ -22,11 +22,11 @@ The mask is constant and the \code{tm} argument to the mask is ignored.
 }
 \examples{
 mask  <- gshhsMask() ## initialize land mask function
-mask(0,c(100,-65)) ## test point lon,lat
+mask(0, c(100, -65)) ## test point lon,lat
 
 }
 \references{
-Wessel, P., and W. H. F. Smith, A Global Self-consistent, Hierarchical, High-resolution Shoreline Database, J. Geophys. Res., 101, #B4, pp. 8741-8743, 1996. \url{https://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html}
+Wessel P, Smith WHF (1996) A Global Self-consistent, Hierarchical, High-resolution Shoreline Database. J. Geophys. Res. 101: 8741-8743. \url{https://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html}
 }
 \seealso{
 \code{\link{surrogateAR}}

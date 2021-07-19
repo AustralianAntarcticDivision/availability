@@ -3,7 +3,6 @@
 \docType{package}
 \name{availability}
 \alias{availability}
-\alias{availability-package}
 \title{\pkg{availability}}
 \description{
 Estimating geographic space available to animals based on telemetry data

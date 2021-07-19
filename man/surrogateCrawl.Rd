@@ -4,9 +4,15 @@
 \alias{surrogateCrawl}
 \title{Regressive bridge sampler}
 \usage{
-surrogateCrawl(model, xs, ts = 1:nrow(xs), fixed = rep(c(TRUE, FALSE,
-  TRUE), c(1, nrow(xs) - 2, 1)), point.check = function(tm, pt) TRUE,
-  Verr = diag(c(1e-04, 1e-04, 0.1, 0.1)), partial = FALSE)
+surrogateCrawl(
+  model,
+  xs,
+  ts = 1:nrow(xs),
+  fixed = rep(c(TRUE, FALSE, TRUE), c(1, nrow(xs) - 2, 1)),
+  point.check = function(tm, pt) TRUE,
+  Verr = diag(c(1e-04, 1e-04, 0.1, 0.1)),
+  partial = FALSE
+)
 }
 \arguments{
 \item{model}{a list with the transition and covariance matrices

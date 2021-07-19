@@ -4,9 +4,15 @@
 \alias{surrogateAR}
 \title{VAR bridge sampler}
 \usage{
-surrogateAR(model, xs, ts = 1:nrow(xs), fixed = rep(c(TRUE, FALSE,
-  TRUE), c(1, nrow(xs) - 2, 1)), point.check = function(tm, pt) TRUE,
-  random.rotation = c(-pi, pi), partial = FALSE)
+surrogateAR(
+  model,
+  xs,
+  ts = 1:nrow(xs),
+  fixed = rep(c(TRUE, FALSE, TRUE), c(1, nrow(xs) - 2, 1)),
+  point.check = function(tm, pt) TRUE,
+  random.rotation = c(-pi, pi),
+  partial = FALSE
+)
 }
 \arguments{
 \item{model}{a model generated with \code{surrogateARModel}.}

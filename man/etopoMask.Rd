@@ -4,8 +4,12 @@
 \alias{etopoMask}
 \title{Land Mask}
 \usage{
-etopoMask(basename = "ETOPO1_Bed_c_geotiff", path = ".", tmp = path,
-  land = FALSE)
+etopoMask(
+  basename = "ETOPO1_Bed_c_geotiff",
+  path = ".",
+  tmp = path,
+  land = FALSE
+)
 }
 \arguments{
 \item{basename}{the name of the etopo geotiff (without file extension).}
@@ -28,7 +32,7 @@ etopo geotiff is not bundled with the package and must be
 downloaded from
 \url{https://www.ngdc.noaa.gov/mgg/global/global.html}.
 
-When the mask is intially created, a native raster (grd,gri)
+When the mask is intially created, a native raster (grd, gri)
 version of the geotiff is created in the directory \code{tmp},
 which must be writable. This file can be deleted when the
 computation is finished.
