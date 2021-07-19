@@ -5,6 +5,7 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/AustralianAntarcticDivision/availability/workflows/R-CMD-check/badge.svg)](https://github.com/AustralianAntarcticDivision/availability/actions)
 <!-- badges: end -->
 
 An R package for estimating geographic space available to animals based
