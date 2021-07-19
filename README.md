@@ -5,7 +5,7 @@ An R package for estimating geographic space available to animals based on telem
 ## Installation
 ```{r}
 library(remotes)
-install_github("AustralianAntarcticDataCentre/availability")
+install_github("AustralianAntarcticDivision/availability")
 ```
 
 ## Minimal usage examples
