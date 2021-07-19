@@ -1,0 +1,6 @@
+^appveyor\.yml$
+^\.travis\.yml$
+^data-raw$
+^docs$
+^README\.Rmd$
+^README\.html$

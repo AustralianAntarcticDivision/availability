@@ -10,9 +10,10 @@
 # RStudio files
 .Rproj.user/
 *.Rproj
-.Rbuildignore
 
 *~
 .Rproj.user
 
 vignettes/availability.html
+
+README.html
