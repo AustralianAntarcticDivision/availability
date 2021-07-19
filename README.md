@@ -58,7 +58,7 @@ Please note: this package was developed with version 1 of the `crawl` package. I
 
 
 ## Vignette
-More detailed usage examples are in the [package vignette](https://australianantarcticdatacentre.github.io/availability/articles/availability.html).
+More detailed usage examples are in the [package vignette](https://australianantarcticdivision.github.io/availability/articles/availability.html).
 
 ## References
 [1] Raymond B *et al.* (2015) Important marine habitat off East Antarctica revealed by two decades of multi-species predator tracking. *Ecography*. [doi:10.1111/ecog.01021](https://doi.org/10.1111/ecog.01021)

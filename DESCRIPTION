@@ -7,8 +7,8 @@ Authors@R: c(person("Ben", "Raymond", email = "ben.raymond@aad.gov.au", role = c
              person("Ian", "Jonsen", role = "aut"),
              person("Ryan", "Reisinger", role = "aut"))
 Description: Estimating geographic space available to animals based on telemetry data.
-URL: https://github.com/AustralianAntarcticDataCentre/availability
-BugReports: https://github.com/AustralianAntarcticDataCentre/availability/issues
+URL: https://github.com/AustralianAntarcticDivision/availability
+BugReports: https://github.com/AustralianAntarcticDivision/availability/issues
 Encoding: UTF-8
 Depends:
     R (>= 3.3.0)
