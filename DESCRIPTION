@@ -1,7 +1,7 @@
 Package: availability
 Type: Package
 Title: Estimating Geographic Space Available to Animals Based on Telemetry Data
-Version: 0.14.0
+Version: 0.15.0
 Authors@R: c(person("Ben", "Raymond", email = "ben.raymond@aad.gov.au", role = c("aut", "cre")),
              person("Simon", "Wotherspoon", role = "aut"),
              person("Ian", "Jonsen", role = "aut"),
@@ -19,13 +19,14 @@ Imports:
     testthat,
     png
 Suggests:
-    argosfilter,
     crawl,
     knitr,
     ggplot2,
     maptools,
-    rmarkdown
+    rmarkdown,
+    sp,
+    trip
 License: MIT + file LICENSE
 LazyLoad: yes
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.0
 VignetteBuilder: knitr

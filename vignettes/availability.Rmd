@@ -29,7 +29,8 @@ NOTE: these examples require `crawl` v1, because the track coordinates are not p
 
 ```{r packages}
 library(availability)
-library(argosfilter)
+library(sp)
+library(trip)
 library(crawl)
 library(geosphere)
 library(ggplot2)
@@ -47,27 +48,24 @@ fit_crawl <- function(d, tstep = 3, smaxit = 100, attempts = 10) {
 
     ## merge argos error information into d
     d <- merge(d, argos_errors)
+    this <- SpatialPointsDataFrame(d[, c("decimal_longitude", "decimal_latitude")],
+                                   d, proj4string = CRS("+proj=longlat"))
+    this <- spTransform(this, CRSobj = CRS("+proj=laea"))
 
-    ## ensure time-ordering
-    d <- d[order(d$date), ]
+    this <- trip(this, TORnames = c("date", "individual_id"))
+    ok <- speedfilter(this, max.speed = 5)
+    this <- this[ok, ]
 
-    ## apply an initial speed filter
-    d$filt <- sdafilter(lat = d$decimal_latitude, lon = d$decimal_longitude, dtime = d$date,
-                        lc = d$location_quality, vmax = 5, ang = c(15, 25),
-                        distlim = c(2500, 5000))
-    d <- d[d$filt != "removed", ]
-
-    initial.state <- list(a1.x = c(d$decimal_longitude[1], 0),
-                          a1.y = c(d$decimal_latitude[1], 0),
+    initial.state <- list(a1.x = c(coordinates(this)[1, 1], 0),
+                          a1.y = c(coordinates(this)[1, 2], 0),
                           P1.x = diag(c(0.001, 0.001)), P1.y = diag(c(0.001, 0.001)))
 
     ## Repeatedly attempt to fit model.
-    fit <- list(data = d, fn.args = list(tstep = tstep, smaxit = smaxit, attempts = attempts))
+    fit <- list(data = this, fn.args = list(tstep = tstep, smaxit = smaxit, attempts = attempts))
     for(i in seq_len(attempts)) {
         fit$crawl <- try(crwMLE(mov.model = ~1, err.model = list(x = ~errX, y = ~errY),
-                                stop.model = ~land, data = d,
-                                coord = c("decimal_longitude", "decimal_latitude"),
-                                polar.coord = FALSE, Time.name = "date",
+                                stop.model = ~land, data = this,
+                                Time.name = "date",
                                 initial.state = initial.state, initialSANN = list(maxit = smaxit)),
                          silent = TRUE)
         if(!inherits(fit$crawl, "try-error")) break
@@ -172,11 +170,12 @@ temp <- rbind(temp, data.frame(speed = step_len(trkar$xs) / time_step, track = "
 temp <- rbind(temp, data.frame(speed = step_len(trkcrw$xs) / time_step, track = "Crawl"))
 ggplot(data = temp, aes(x = speed, fill = track)) + geom_histogram(binwidth = 0.5) +
     facet_grid(track~.) + scale_x_continuous(breaks = seq(from = 0, to = 60, by = 5)) +
-    xlab("Speed (km/h)") + scale_fill_manual(values = cpal)
+    xlab("Speed (km/h)") + scale_fill_manual(values = cpal) + xlim(c(0, 60))
 ```
 
-The observed track appears to have a number of segments with slow speeds (see the peak in the histogram at around 3 km/h, possibly related to area-restricted searching), superimposed on a broad distribution of speeds up to about 35 km/h. There is also a peak in the histogram at around 15 km/h, but this looks suspiciously like an artefact arising from the interpolation of the raw track positions.
+The observed track appears to have a number of segments with slow speeds (see the peak in the histogram at around 3 km/h, possibly related to area-restricted searching), superimposed on a broad distribution of speeds up to about 35 km/h.
 
+In this instance the crawl-based method doesn't do a particularly good job of reproducing the speeds of the observed track. The AR-based method similarly fails to reproduce the steeply-peaked shape of the distribution, but does produce a simulated track that is plausible in the sense that it has speeds in largely the same range as the observed track.
 
 ### Simulating tracks: land masking
 
@@ -250,16 +249,15 @@ temp <- rbind(temp, data.frame(speed = step_len(trkar$xs) / time_step, track = "
 temp <- rbind(temp, data.frame(speed = step_len(trkcrw$xs) / time_step, track = "Crawl"))
 ggplot(data = temp, aes(x = speed, fill = track)) + geom_histogram(binwidth = 0.5) +
     facet_grid(track~.) + scale_x_continuous(breaks = seq(from = 0, to = 60, by = 5)) +
-    xlab("Speed (km/h)") + scale_fill_manual(values = cpal)
+    xlab("Speed (km/h)") + scale_fill_manual(values = cpal) + xlim(c(0, 60))
 ```
-
-In this instance the crawl-based method doesn't do a particularly good job of reproducing the speeds of the observed track. The AR-based method similarly fails to reproduce the steeply-peaked shape of the distribution, but does produce a simulated track that is plausible in the sense that it has speeds in largely the same range as the observed track.
 
 ## Antarctic Fur Seal
 
 Fur seal track from Reisinger et al. (2018).
 
 ```{r track_fs}
+set.seed(28)
 fit <- fit_crawl(ptt_data$AFS, tstep = time_step)
 tp <- templateTrack(fit)
 ```
