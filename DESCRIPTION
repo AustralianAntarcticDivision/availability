@@ -23,6 +23,7 @@ Suggests:
     knitr,
     ggplot2,
     maptools,
+    rgdal,
     rmarkdown,
     sp,
     trip
