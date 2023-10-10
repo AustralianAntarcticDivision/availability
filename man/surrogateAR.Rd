@@ -7,7 +7,7 @@
 surrogateAR(
   model,
   xs,
-  ts = 1:nrow(xs),
+  ts = seq_len(nrow(xs)),
   fixed = rep(c(TRUE, FALSE, TRUE), c(1, nrow(xs) - 2, 1)),
   point.check = function(tm, pt) TRUE,
   random.rotation = c(-pi, pi),
