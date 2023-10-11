@@ -5,9 +5,9 @@
 \alias{landmask_init}
 \title{A land mask based on the GSHHS data set}
 \usage{
-gshhsMask(res = 0.1)
+gshhsMask(res = 0.1, latmin = -90, latmax = 90)
 
-landmask_init(res = 0.1)
+landmask_init(res = 0.1, latmin = -90, latmax = 90)
 }
 \arguments{
 \item{res}{numeric: the spatial resolution of the mask, in degrees (either 0.1 or 0.05)}

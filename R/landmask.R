@@ -13,20 +13,17 @@
 #' mask(0, c(100, -65)) ## test point lon,lat
 #'
 #' @export
-gshhsMask <- function(res = 0.1) {
-    if (!res %in% c(0.1, 0.05)) {
-        res <- 0.1
-    }
+gshhsMask <- function(res = 0.1, latmin = -90, latmax = 90) {
+    if (!res %in% c(0.1, 0.05)) res <- 0.1
     land.mask <- readPNG(system.file("extdata", paste0("land_mask_gshhs-", res, ".png"), package = "availability")) ## 0 = land, 1 = ocean
     if (length(dim(land.mask)) > 1) land.mask <- land.mask[, , 1]
     land.lon <- seq(from = -180+res/2, to = 180-res/2, length.out = dim(land.mask)[2])
     land.lat <- seq(from = 90-res/2, to = -90+res/2, length.out = dim(land.mask)[1])
     function(tm, pt) {
-        lonidx <- which.min(abs(land.lon-((pt[[1]]+180)%%360-180)))
-        latidx <- which.min(abs(land.lat-pt[[2]]))
-        land.mask[latidx, lonidx] > 0
+        (pt[[2]] > latmin) & (pt[[2]] < latmax) & (land.mask[which.min(abs(land.lat-pt[[2]])), which.min(abs(land.lon-((pt[[1]]+180)%%360-180)))] > 0)
     }
 }
+
 
 ##' @rdname gshhsMask
 ##' @export
