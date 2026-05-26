@@ -9,4 +9,4 @@
 #' @importFrom png readPNG
 #' @importFrom geosphere distVincentyEllipsoid finalBearing distVincentySphere
 #' @importFrom stats ar rnorm runif
-NULL
+"_PACKAGE"

@@ -2,10 +2,19 @@
 % Please edit documentation in R/availability-package.R
 \docType{package}
 \name{availability}
+\alias{availability-package}
 \alias{availability}
 \title{\pkg{availability}}
 \description{
 Estimating geographic space available to animals based on telemetry data
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/AustralianAntarcticDivision/availability}
+  \item Report bugs at \url{https://github.com/AustralianAntarcticDivision/availability/issues}
+}
+
 }
 \author{
 Ben Raymond \email{ben.raymond@aad.gov.au}, Simon Wotherspoon, Ryan Reisinger

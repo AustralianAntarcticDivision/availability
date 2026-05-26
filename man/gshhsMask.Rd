@@ -11,6 +11,10 @@ landmask_init(res = 0.1, latmin = -90, latmax = 90)
 }
 \arguments{
 \item{res}{numeric: the spatial resolution of the mask, in degrees (either 0.1 or 0.05)}
+
+\item{latmin}{numeric: southernmost latitude extent of the land mask}
+
+\item{latmax}{numeric: northernmost latitude extent of the land mask}
 }
 \value{
 function that returns a logical indicating whether the point is at sea (TRUE) or on land (FALSE)

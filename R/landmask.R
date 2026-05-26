@@ -5,6 +5,8 @@
 #' The mask is constant and the \code{tm} argument to the mask is ignored.
 #'
 #' @param res numeric: the spatial resolution of the mask, in degrees (either 0.1 or 0.05)
+#' @param latmin numeric: southernmost latitude extent of the land mask
+#' @param latmax numeric: northernmost latitude extent of the land mask
 #' @return function that returns a logical indicating whether the point is at sea (TRUE) or on land (FALSE)
 #' @seealso \code{\link{surrogateAR}}
 #' @references Wessel P, Smith WHF (1996) A Global Self-consistent, Hierarchical, High-resolution Shoreline Database. J. Geophys. Res. 101: 8741-8743. \url{https://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html}
