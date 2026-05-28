@@ -1,7 +1,7 @@
 Package: availability
 Type: Package
 Title: Estimating Geographic Space Available to Animals Based on Telemetry Data
-Version: 0.16.0
+Version: 0.17.0
 Authors@R: c(person("Ben", "Raymond", email = "ben.raymond@aad.gov.au", role = c("aut", "cre")),
              person("Simon", "Wotherspoon", role = "aut"),
              person("Ian", "Jonsen", role = "aut"),
