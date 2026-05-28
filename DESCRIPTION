@@ -1,7 +1,7 @@
 Package: availability
 Type: Package
 Title: Estimating Geographic Space Available to Animals Based on Telemetry Data
-Version: 0.17.0
+Version: 0.17.9900
 Authors@R: c(person("Ben", "Raymond", email = "ben.raymond@aad.gov.au", role = c("aut", "cre")),
              person("Simon", "Wotherspoon", role = "aut"),
              person("Ian", "Jonsen", role = "aut"),
@@ -10,16 +10,17 @@ Description: Estimating geographic space available to animals based on telemetry
 URL: https://github.com/AustralianAntarcticDivision/availability
 BugReports: https://github.com/AustralianAntarcticDivision/availability/issues
 Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.2.0)
 Imports:
+    aniMotum,
     assertthat,
     geosphere,
     raster,
     testthat,
     png
 Suggests:
-    aniMotum,
     knitr,
     ggplot2,
     maps,
