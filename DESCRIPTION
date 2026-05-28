@@ -19,13 +19,11 @@ Imports:
     testthat,
     png
 Suggests:
-    crawl,
+    aniMotum,
     knitr,
     ggplot2,
-    maptools,
-    rgdal,
+    maps,
     rmarkdown,
-    sp,
     trip
 License: MIT + file LICENSE
 LazyLoad: yes
