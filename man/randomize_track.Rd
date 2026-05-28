@@ -14,16 +14,17 @@ latitude of each point}
 upper limits of the random rotation to apply to the randomized
 track}
 
-\item{reorder}{should the track steps be randomly reordered.}
+\item{reorder}{should the track steps be randomly reordered?}
 }
 \value{
-A dataframe with columns
-\item{\code{lon}}{the longitude of the randomized track}
-\item{\code{lat}}{the latitude of the randomized track}
+A dataframe with columns:
+\itemize{
+\item \code{lon}: the longitude of the randomized track
+\item \code{lat}: the latitude of the randomized track
+}
 }
 \description{
-Compute surrogate track by randomizing the steps of an observed
-track
+Compute surrogate track by randomizing the steps of an observed track
 }
 \details{
 Converts a track to a distance/bearing representation, and then

@@ -2,12 +2,9 @@
 % Please edit documentation in R/availability.R
 \name{surrogateARModel}
 \alias{surrogateARModel}
-\alias{surrogate_arfit}
 \title{VAR(1) track model}
 \usage{
 surrogateARModel(lonlat)
-
-surrogate_arfit(lonlat)
 }
 \arguments{
 \item{lonlat}{a 2-column matrix or dataframe with longitude and
@@ -20,9 +17,8 @@ An object of class "ar"
 Fit first-order vector-autoregressive model to track
 }
 \details{
-This function fits the vector AR(1) model used as the \code{model}
-argument to \code{\link{surrogateAR}}.
+This function fits the vector AR(1) model used as the \code{model} argument to \code{\link[=surrogateAR]{surrogateAR()}}
 }
 \seealso{
-\code{\link{ar}}, \code{\link{surrogateAR}}
+\code{\link[=ar]{ar()}}, \code{\link[=surrogateAR]{surrogateAR()}}
 }

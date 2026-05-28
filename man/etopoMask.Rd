@@ -12,16 +12,16 @@ etopoMask(
 )
 }
 \arguments{
-\item{basename}{the name of the etopo geotiff (without file extension).}
+\item{basename}{the name of the etopo geotiff (without file extension)}
 
 \item{path}{the path to a folder containing the etopo geotiff}
 
 \item{tmp}{the path to a writeable folder}
 
-\item{land}{the logical value to return for land.}
+\item{land}{the logical value to return for land}
 }
 \value{
-a logical indicating whether the point is land or sea.
+a logical indicating whether the point is land or sea
 }
 \description{
 A land mask based on the full ETOPO1 dataset

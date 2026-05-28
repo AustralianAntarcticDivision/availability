@@ -2,14 +2,14 @@
 #'
 #' Generate a land mask function based on the Global Self-consistent, Hierarchical, High-resolution Geography Database.
 #' The mask is provided at two (approximate) spatial resolutions: 0.1 degree and 0.05 degrees. The latter requires significantly more memory.
-#' The mask is constant and the \code{tm} argument to the mask is ignored.
+#' The mask is constant and the `tm` argument to the mask is ignored.
 #'
 #' @param res numeric: the spatial resolution of the mask, in degrees (either 0.1 or 0.05)
 #' @param latmin numeric: southernmost latitude extent of the land mask
 #' @param latmax numeric: northernmost latitude extent of the land mask
 #' @return function that returns a logical indicating whether the point is at sea (TRUE) or on land (FALSE)
-#' @seealso \code{\link{surrogateAR}}
-#' @references Wessel P, Smith WHF (1996) A Global Self-consistent, Hierarchical, High-resolution Shoreline Database. J. Geophys. Res. 101: 8741-8743. \url{https://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html}
+#' @seealso [surrogateAR()], [surrogateAM()]
+#' @references Wessel P, Smith WHF (1996) A Global Self-consistent, Hierarchical, High-resolution Shoreline Database. J. Geophys. Res. 101: 8741-8743. <https://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html>
 #' @examples
 #' mask  <- gshhsMask() ## initialize land mask function
 #' mask(0, c(100, -65)) ## test point lon,lat
@@ -53,23 +53,23 @@ landmask_init <- gshhsMask
 ##' Generate a land mask function based on ETOPO1 topography. The
 ##' etopo geotiff is not bundled with the package and must be
 ##' downloaded from
-##' \url{https://www.ngdc.noaa.gov/mgg/global/global.html}.
+##' <https://www.ngdc.noaa.gov/mgg/global/global.html>.
 ##'
 ##' When the mask is intially created, a native raster (grd, gri)
-##' version of the geotiff is created in the directory \code{tmp},
+##' version of the geotiff is created in the directory `tmp`,
 ##' which must be writable. This file can be deleted when the
 ##' computation is finished.
 ##'
-##' The \code{land} argument determines whether the mask function
-##' returns \code{TRUE} or \code{FALSE} for land. The mask is constant
-##' and the \code{tm} argument to the mask is ignored.
+##' The `land` argument determines whether the mask function
+##' returns `TRUE` or `FALSE` for land. The mask is constant
+##' and the `tm` argument to the mask is ignored.
 ##'
 ##' @title Land Mask
-##' @param basename the name of the etopo geotiff (without file extension).
+##' @param basename the name of the etopo geotiff (without file extension)
 ##' @param path the path to a folder containing the etopo geotiff
 ##' @param tmp the path to a writeable folder
-##' @param land the logical value to return for land.
-##' @return a logical indicating whether the point is land or sea.
+##' @param land the logical value to return for land
+##' @return a logical indicating whether the point is land or sea
 ##' @importFrom raster raster writeRaster extract
 ##' @export
 etopoMask <- function(basename = "ETOPO1_Bed_c_geotiff", path = ".", tmp = path, land = FALSE) {

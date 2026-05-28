@@ -33,5 +33,5 @@ mask(0, c(100, -65)) ## test point lon,lat
 Wessel P, Smith WHF (1996) A Global Self-consistent, Hierarchical, High-resolution Shoreline Database. J. Geophys. Res. 101: 8741-8743. \url{https://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html}
 }
 \seealso{
-\code{\link{surrogateAR}}
+\code{\link[=surrogateAR]{surrogateAR()}}, \code{\link[=surrogateAM]{surrogateAM()}}
 }

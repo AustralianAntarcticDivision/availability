@@ -13,9 +13,11 @@ surrogateCrawlModel(fit, dt)
 }
 \value{
 A list containing
-\item{\code{A}}{the transition matrix}
-\item{\code{Q}}{the covariance matrix}
-\item{\code{dt}}{the time increment}
+\itemize{
+\item \code{A}: the transition matrix
+\item \code{Q}: the covariance matrix
+\item \code{dt}: the time increment
+}
 }
 \description{
 Generate Transition and Covariance Matrices for a simple Crawl Model

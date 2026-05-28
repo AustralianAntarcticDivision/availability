@@ -6,7 +6,7 @@
 #'
 #' @usage data(ptt_data)
 #'
-#' @format A list containing three tracks collected using Argos PTT tags: \code{DMS} from a sooty shearwater, \code{SES} from an elephant seal, and \code{AFS} from an Antarctic fur seal.
+#' @format A list containing three tracks collected using Argos PTT tags: `DMS` from a sooty shearwater, `SES` from an elephant seal, and `AFS` from an Antarctic fur seal.
 #'
 #' @keywords datasets
 #'

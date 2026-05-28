@@ -11,14 +11,15 @@ calc_distbearing(lonlat)
 latitude of each point}
 }
 \value{
-A dataframe with columns
-\item{\code{lon}}{the longitude of the randomized track}
-\item{\code{lat}}{the latitude of the randomized track}
+A dataframe with columns:
+\itemize{
+\item \code{lon}: the longitude of the randomized track
+\item \code{lat}: the latitude of the randomized track
+}
 }
 \description{
-Calculate distances in metres and bearing between successive
-points along track.
+Calculate distances in metres and bearing between successive points along track
 }
 \details{
-This is an internal function used by \code{\link{randomize_track}}.
+This is an internal function used by \code{\link[=randomize_track]{randomize_track()}}
 }
