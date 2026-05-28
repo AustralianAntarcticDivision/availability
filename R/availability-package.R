@@ -7,6 +7,6 @@
 #' @docType package
 #' @import assertthat testthat
 #' @importFrom png readPNG
-#' @importFrom geosphere distVincentyEllipsoid finalBearing distVincentySphere
+#' @importFrom geosphere destPoint distVincentyEllipsoid finalBearing distVincentySphere
 #' @importFrom stats ar rnorm runif
 "_PACKAGE"
