@@ -1,0 +1,21 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/LICENSE-text.html</loc></url>
+<url><loc>/articles/availability.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/reference/availability.html</loc></url>
+<url><loc>/reference/calc_distbearing.html</loc></url>
+<url><loc>/reference/etopoMask.html</loc></url>
+<url><loc>/reference/gshhsMask.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/ptt_data.html</loc></url>
+<url><loc>/reference/randomize_track.html</loc></url>
+<url><loc>/reference/surrogateAR.html</loc></url>
+<url><loc>/reference/surrogateARModel.html</loc></url>
+<url><loc>/reference/surrogateCrawl.html</loc></url>
+<url><loc>/reference/surrogateCrawlModel.html</loc></url>
+<url><loc>/reference/surrogate_arsimulate.html</loc></url>
+</urlset>
+
