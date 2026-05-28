@@ -263,7 +263,7 @@ surrogateAR <- function(model, xs, ts = seq_len(nrow(xs)), fixed = rep(c(TRUE, F
 ##' \item{\code{dt}}{the time increment}
 ##' @export
 surrogateCrawlModel <- function(fit, dt) {
-    warning("surrogateCrawlModel is deprecated: it only works with crawl package version 1")
+    warning("surrogateCrawlModel was developed with crawl package version 1, it has not been tested with v2")
     ## Components of the transition and covariance matrices
     a <- function(beta) (1 - exp(-beta * dt)) / beta
     b <- function(beta) exp(-beta * dt)
@@ -335,7 +335,7 @@ surrogateCrawl <- function(model, xs, ts = 1:nrow(xs),
                            Verr = diag(c(.0001, .0001, 0.1, 0.1)),
                            partial = FALSE) {
 
-    warning("surrogateCrawl is deprecated: it only works with crawl package version 1")
+    warning("surrogateCrawlModel was developed with crawl package version 1, it has not been tested with v2")
     ## Extract model matrices
     A <- model$A
     Q <- model$Q
@@ -469,8 +469,7 @@ surrogate_arsimulate <- function(arfit,n,startlonlat,fixed=NULL,endlonlat=NULL,
                                 random.rotation,verbose,return.all.points,intermediate.tries)
     list(ts=1:nrow(xs),xs=xs)
   } else {
-    warning("surrogate_arsimulate is deprecated and will be removed: ",
-            "use surrogateAR().")
+    warning("surrogate_arsimulate is deprecated and will be removed: use surrogateAR().")
     if(verbose>0) warning("Only the original surrogate_arsimulate supports verbose")
     ## Translate fixed point specification
     xs <- matrix(NA,n,2)

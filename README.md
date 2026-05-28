@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/AustralianAntarcticDivision/availability/workflows/R-CMD-check/badge.svg)](https://github.com/AustralianAntarcticDivision/availability/actions)
+[![R-CMD-check](https://github.com/AustralianAntarcticDivision/availability/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AustralianAntarcticDivision/availability/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 An R package for estimating geographic space available to animals based
@@ -64,9 +64,10 @@ stcrw <- surrogateCrawl(model, as.matrix(pr[, c("mu.x", "mu.y", "nu.x", "nu.y")]
 
 ## Crawl note
 
-Please note: this package was developed with version 1 of the `crawl`
-package. It should also work with `crawl` v2, but note that v2 only
-works with projected coordinates (not longitude and latitude).
+Please note: for `crawl`-based functions, this package was developed
+with version 1 of the `crawl` package. It should also work with
+`crawl` v2, but note that v2 only works with projected coordinates
+(not longitude and latitude).
 
 ## Vignette
 
