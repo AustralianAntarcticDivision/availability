@@ -17,7 +17,10 @@ Imports:
     aniMotum,
     assertthat,
     geosphere,
+    mvtnorm,
+    tmvtnorm,
     raster,
+    sf,
     testthat,
     png
 Suggests:

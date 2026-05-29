@@ -20,9 +20,16 @@ surrogateAM <- function(fit, xs, ts, fixed = rep(c(TRUE, FALSE, TRUE), times = c
         warning("`fit` contains multiple models: only the first will be used")
         fit <- fit[1, ]
     }
+
+    K <- 1L ## first model only
+    model <- fit$ssm[[K]]$pm ## model type as a string, "crw", "rw", etc
+
+    uv <- xy <- NULL
     if (missing(xs)) {
         xs <- aniMotum::grab(fit, what = "predicted")
         ts <- xs$date
+        uv <- xs[, c("u", "v")]
+        xy <- xy[, c("x", "y")]
         xs <- xs[, c("lon", "lat")]
         fixed <- rep(c(TRUE, FALSE, TRUE), times = c(1, nrow(xs) - 2, 1))
     } else if (missing(ts)) {
@@ -39,34 +46,32 @@ surrogateAM <- function(fit, xs, ts, fixed = rep(c(TRUE, FALSE, TRUE), times = c
     } else {
         dt <- c(0, diff(ts))
     }
-    K <- 1L ## first model only
-    model <- fit$ssm[[K]]$pm ## model type as a string, "crw", "rw", etc
 
     ## we'll do the simulation in projected xy space
     prj.sim <- "+proj=merc +lon_0=0 +datum=WGS84 +units=km +no_defs"
 
-    ll2xy <- function(lon, lat) {
-        ## st_coordinates(st_transform(st_as_sf(data.frame(lon = lon, lat = lat), coords = c("lon","lat"), crs = 4326), crs = prj.sim))
-        sf_project(from = "EPSG:4326", to = prj.sim, pts = matrix(c(lon, lat), ncol = 2, byrow = TRUE), authority_compliant = FALSE)
+    ll2xy <- function(lonlat) {
+        sf_project(from = "EPSG:4326", to = prj.sim, pts = matrix(lonlat, ncol = 2, byrow = TRUE), authority_compliant = FALSE)
     }
-    xy2ll <- function(x, y) {
-        ## st_coordinates(st_transform(st_as_sf(data.frame(x = x, y = y), coords = c("x","y"), crs = prj.sim), crs = 4326))
-        sf_project(from = prj.sim, to = "EPSG:4326", pts = matrix(c(x, y), ncol = 2, byrow = TRUE), authority_compliant = FALSE)
+    xy2ll <- function(xy) {
+        sf_project(from = prj.sim, to = "EPSG:4326", pts = matrix(xy, ncol = 2, byrow = TRUE), authority_compliant = FALSE)
     }
 
     ## get parameters from model fit object
     if (model == "crw") {
         Sigma <- diag(2) * 2 * fit$ssm[[K]]$par[c("D_x","D_y"), 1]
         Sigma[1,2] <- Sigma[2,1] <- fit$ssm[[K]]$par["rho_p",1] * sqrt(Sigma[1,1]) * sqrt(Sigma[2,2])
-        vmin <- c(min(loc$u, na.rm = TRUE), min(loc$v, na.rm = TRUE))
-        vmax <- c(max(loc$u, na.rm = TRUE), max(loc$v, na.rm = TRUE))
+        if (is.null(uv)) stop("missing the estimated state velocities")
+        vmin <- c(min(uv$u, na.rm = TRUE), min(uv$v, na.rm = TRUE))
+        vmax <- c(max(uv$u, na.rm = TRUE), max(uv$v, na.rm = TRUE))
         v <- matrix(NA_real_, nrow = n, ncol = 2) ## velocities
-        v[1, ] <- c(0, 0) ## initially zero? almost zero?
+        v[1, ] <- c(0, 0) ## initially zero
     } else if (model == "rw") {
         Sigma <- diag(2) * c(fit$ssm[[K]]$par["sigma_x", 1], fit$ssm[[K]]$par["sigma_y", 1]) ^ 2
         Sigma[!Sigma] <- prod(Sigma[1, 1]^0.5, Sigma[2, 2]^0.5) * fit$ssm[[K]]$par["rho_p", 1]
-        vmin <- c(min(diff(loc$x), na.rm = TRUE), min(diff(loc$y), na.rm = TRUE))
-        vmax <- c(max(diff(loc$x), na.rm = TRUE), max(diff(loc$y), na.rm = TRUE))
+        if (is.null(xy)) stop("missing the track locations in projected space")
+        vmin <- c(min(diff(xy$x), na.rm = TRUE), min(diff(xy$y), na.rm = TRUE))
+        vmax <- c(max(diff(xy$x), na.rm = TRUE), max(diff(xy$y), na.rm = TRUE))
     } else {
         stop("unsupported model type, must be 'crw' or 'rw'")
     }
@@ -90,12 +95,12 @@ surrogateAM <- function(fit, xs, ts, fixed = rep(c(TRUE, FALSE, TRUE), times = c
                 ## Find any remaining fixed points
                 kfixed <- if (k <= n) (k:n)[fixed[k:n]] else integer(0)
             } else {
-                x <- ll2xy(ll[[1]], ll[[2]]) ## position in projected coords
+                x <- ll2xy(ll) ## position in projected coords
                 ## Try at most 100 new candidate points
                 for (r in 1:100) {
                     if (model == "crw") {
                         ## following https://github.com/ianjonsen/aniMotum/blob/cae6bb0c69669fc8c427362d9308facde0bb4ac0/R/sim_fit.R#L217
-                        v[k, ] <<- tmvtnorm::rtmvnorm(1, v[k - 1, ], sigma = Sigma * dt[k], lower = vmin, upper = vmax)
+                        v[k, ] <<- rtmvnorm(1, v[k - 1, ], sigma = Sigma * dt[k], lower = vmin, upper = vmax)
                         ## trial new position
                         x1 <- x + v[k, ] * dt[k]
                     } else {
@@ -110,7 +115,12 @@ surrogateAM <- function(fit, xs, ts, fixed = rep(c(TRUE, FALSE, TRUE), times = c
                             x1 <- x + dxy
                         }
                     }
-                    ll1 <- xy2ll(x1[1], x1[2]) ## convert new location to lon/lat
+                    ll1 <- xy2ll(x1) ## convert new location to lon/lat
+                    if (abs(ll1[2]) > 90) {
+                        ## we've crossed the pole
+                        ll1[2] <- (180 - abs(ll1[2])) * sign(ll1[2])
+                        ll1[1] <- -ll1[1]
+                    }
                     if (length(kfixed)) {
                         this_nudge <- xs[kfixed[1], ] - ll1
                         this_nudge[1] <- angle_normalise(this_nudge[1] / 180 * pi) / pi * 180

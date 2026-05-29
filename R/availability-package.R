@@ -8,5 +8,8 @@
 #' @import assertthat testthat
 #' @importFrom png readPNG
 #' @importFrom geosphere destPoint distVincentyEllipsoid finalBearing distVincentySphere
+#' @importFrom mvtnorm rmvnorm
+#' @importFrom sf sf_project
 #' @importFrom stats ar rnorm runif
+#' @importFrom tmvtnorm rtmvnorm
 "_PACKAGE"
