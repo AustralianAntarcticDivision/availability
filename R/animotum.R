@@ -15,7 +15,7 @@
 #' @export
 surrogateAM <- function(fit, xs, ts, fixed = rep(c(TRUE, FALSE, TRUE), times = c(1, nrow(xs) - 2, 1)), point.check = function(tm, pt) TRUE, partial = FALSE) {
 
-    stopifnot("fit must be an ssm_df object as returned by aniMotum::fit_ssm()" = inherits(x, "ssm_df"))
+    stopifnot("fit must be an ssm_df object as returned by aniMotum::fit_ssm()" = inherits(fit, "ssm_df"))
     if (nrow(fit) > 1) {
         warning("`fit` contains multiple models: only the first will be used")
         fit <- fit[1, ]
