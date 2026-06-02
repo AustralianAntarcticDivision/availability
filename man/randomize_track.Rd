@@ -7,12 +7,9 @@
 randomize_track(lonlat, rotate = c(-pi, pi), reorder = FALSE)
 }
 \arguments{
-\item{lonlat}{a 2-column matrix or dataframe with longitude and
-latitude of each point}
+\item{lonlat}{a 2-column matrix or dataframe with longitude and latitude of each point}
 
-\item{rotate}{a 2-element numeric vector giving the lower and
-upper limits of the random rotation to apply to the randomized
-track}
+\item{rotate}{a 2-element numeric vector giving the lower and upper limits of the random rotation to apply to the randomized track}
 
 \item{reorder}{should the track steps be randomly reordered?}
 }

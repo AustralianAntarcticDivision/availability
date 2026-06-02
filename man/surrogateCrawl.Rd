@@ -22,8 +22,7 @@ corresponding to the fitted movement model.}
 
 \item{ts}{the times at which the track is sampled}
 
-\item{fixed}{a logical vector indicating which locations in the
-template path are to be held fixed.}
+\item{fixed}{a logical vector indicating which locations in the template path are to be held fixed.}
 
 \item{point.check}{function that accepts a state and returns \code{TRUE} or \code{FALSE} indicating whether the state is acceptable.}
 

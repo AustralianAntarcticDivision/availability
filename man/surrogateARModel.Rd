@@ -7,8 +7,7 @@
 surrogateARModel(lonlat)
 }
 \arguments{
-\item{lonlat}{a 2-column matrix or dataframe with longitude and
-latitude of each point}
+\item{lonlat}{a 2-column matrix or dataframe with longitude and latitude of each point}
 }
 \value{
 An object of class "ar"

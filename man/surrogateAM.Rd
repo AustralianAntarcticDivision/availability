@@ -20,9 +20,9 @@ surrogateAM(
 
 \item{ts}{POSIXct: the times at which the track is sampled}
 
-\item{fixed}{logical: a vector indicating which locations in the template path are to be held fixed}
+\item{fixed}{logical: a vector (with length equal to the number of rows in \code{xs}) indicating which locations in the template path are to be held fixed}
 
-\item{point.check}{logical: a function that accepts a state and returns \code{TRUE} or \code{FALSE} indicating whether the state is acceptable}
+\item{point.check}{function: a function that accepts a state and returns \code{TRUE} or \code{FALSE} indicating whether the state is acceptable}
 
 \item{partial}{if \code{TRUE}, a partial track is returned if the sampling fails}
 }

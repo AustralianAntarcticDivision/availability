@@ -8,8 +8,8 @@
 #' @param fit a fitted model generated with [aniMotum::fit_ssm()]
 #' @param xs matrix: a two-column matrix giving the the template sequence of locations (longitude and latitude). If not provided, the "predicted" (i.e. filtered and interpolated) track from the `fit` object will be used
 #' @param ts POSIXct: the times at which the track is sampled
-#' @param fixed logical: a vector indicating which locations in the template path are to be held fixed
-#' @param point.check logical: a function that accepts a state and returns `TRUE` or `FALSE` indicating whether the state is acceptable
+#' @param fixed logical: a vector (with length equal to the number of rows in `xs`) indicating which locations in the template path are to be held fixed
+#' @param point.check function: a function that accepts a state and returns `TRUE` or `FALSE` indicating whether the state is acceptable
 #' @param partial if `TRUE`, a partial track is returned if the sampling fails
 #' @return An array of states the define the simulated path
 #' @export
@@ -40,15 +40,10 @@ surrogateAM <- function(fit, xs, ts, fixed = rep(c(TRUE, FALSE, TRUE), times = c
 
     xs <- unname(xs[, 1:2, drop = FALSE])
     n <- nrow(xs)
-    if (inherits(ts, "POSIXct")) {
-        dt <- as.numeric(difftime(ts, c(as.POSIXct(NA), ts[-length(ts)]), units = "hours"))
-        dt[1] <- 0
-    } else {
-        dt <- c(0, diff(ts))
-    }
+    dt <- if (inherits(ts, "POSIXct")) c(0, as.numeric(diff(ts, units = "hours"))) else c(0, diff(ts))
 
-    ## we'll do the simulation in projected xy space
-    prj.sim <- "+proj=merc +lon_0=0 +datum=WGS84 +units=km +no_defs"
+    ## even though our simulated output is given as a sequence of longitudes and latitudes, when we make a step in the simulation we'll do it by adding a random offset to our position in projected xy space
+    prj.sim <- "+proj=merc +lon_0=0 +datum=WGS84 +units=km +no_defs" ## Mercator, as per aniMotum's `sim_fit()` function, but note that this will be a poor choice for tracks near the pole
 
     ll2xy <- function(lonlat) {
         sf_project(from = "EPSG:4326", to = prj.sim, pts = matrix(lonlat, ncol = 2, byrow = TRUE), authority_compliant = FALSE)
@@ -117,7 +112,7 @@ surrogateAM <- function(fit, xs, ts, fixed = rep(c(TRUE, FALSE, TRUE), times = c
                     }
                     ll1 <- xy2ll(x1) ## convert new location to lon/lat
                     if (abs(ll1[2]) > 90) {
-                        ## we've crossed the pole
+                        ## we've crossed the pole - but note that if we are simulating in Mercator projection this can never happen, because the Mercator space is unbounded in y, and adding a y-offset to a point near the pole in Mercator space just moves you asymptotically closer to the pole
                         ll1[2] <- (180 - abs(ll1[2])) * sign(ll1[2])
                         ll1[1] <- -ll1[1]
                     }

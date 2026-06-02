@@ -21,17 +21,13 @@ surrogateAR(
 
 \item{ts}{the times at which the track is sampled}
 
-\item{fixed}{a logical vector indicating which locations in the
-template path are to be held fixed.}
+\item{fixed}{a logical vector indicating which locations in the template path are to be held fixed.}
 
-\item{point.check}{function that accepts a state and
-returns boolean indicating whether the state is acceptable.}
+\item{point.check}{function that accepts a state and returns boolean indicating whether the state is acceptable.}
 
-\item{random.rotation}{the upper and lower limits (radians) of the
-rotation applied to the VAR(1) model.}
+\item{random.rotation}{the upper and lower limits (radians) of the rotation applied to the VAR(1) model.}
 
-\item{partial}{if \code{TRUE}, a partial track is returned if the
-sampling fails.}
+\item{partial}{if \code{TRUE}, a partial track is returned if the sampling fails.}
 }
 \value{
 An array of states the define the simulated path.
