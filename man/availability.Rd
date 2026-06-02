@@ -17,5 +17,14 @@ Useful links:
 
 }
 \author{
-Ben Raymond \email{ben.raymond@aad.gov.au}, Simon Wotherspoon, Ryan Reisinger
+\strong{Maintainer}: Ben Raymond \email{ben.raymond@aad.gov.au}
+
+Authors:
+\itemize{
+  \item Ben Raymond \email{ben.raymond@aad.gov.au}
+  \item Simon Wotherspoon
+  \item Ian Jonsen
+  \item Ryan Reisinger
+}
+
 }
