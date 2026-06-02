@@ -6,11 +6,8 @@
 #' increments.
 #'
 #' @title Randomized track
-#' @param lonlat a 2-column matrix or dataframe with longitude and
-#' latitude of each point
-#' @param rotate a 2-element numeric vector giving the lower and
-#' upper limits of the random rotation to apply to the randomized
-#' track
+#' @param lonlat a 2-column matrix or dataframe with longitude and latitude of each point
+#' @param rotate a 2-element numeric vector giving the lower and upper limits of the random rotation to apply to the randomized track
 #' @param reorder should the track steps be randomly reordered?
 #' @return A dataframe with columns:
 #' * `lon`: the longitude of the randomized track
@@ -56,8 +53,7 @@ calc_distbearing <- function(lonlat) {
 #' This function fits the vector AR(1) model used as the `model` argument to [surrogateAR()]
 #'
 #' @title VAR(1) track model
-#' @param lonlat a 2-column matrix or dataframe with longitude and
-#' latitude of each point
+#' @param lonlat a 2-column matrix or data.frame with longitude and latitude of each point
 #' @return An object of class "ar"
 #' @seealso [ar()], [surrogateAR()]
 #' @export
@@ -85,11 +81,10 @@ surrogateARModel <- function(lonlat) {
     dy <- distVincentyEllipsoid(cbind(lonlat[-nr, 1], lonlat[-1, 2]), lonlat[-nr, ]) * sign(lonlat[-1, 2] - lonlat[-nr, 2])
     ## northwards movement has positive sign
 
-    ## Fit AR1 to distance increments
+    ## Fit VAR1 to distance increments
     dxdy <- data.frame(dx = dx, dy = dy)
     ar(dxdy, order.max = model.order, aic = FALSE)
 }
-
 
 #' Generate new tracks from a VAR(1)
 #'
@@ -123,36 +118,17 @@ surrogateARModel <- function(lonlat) {
 #' @param model a model generated with [surrogateARModel()]
 #' @param ts the times at which the track is sampled
 #' @param xs the template sequence of states
-#' @param fixed a logical vector indicating which locations in the
-#' template path are to be held fixed.
-#' @param point.check function that accepts a state and
-#' returns boolean indicating whether the state is acceptable.
-#' @param random.rotation the upper and lower limits (radians) of the
-#' rotation applied to the VAR(1) model.
-#' @param partial if `TRUE`, a partial track is returned if the
-#' sampling fails.
+#' @param fixed a logical vector indicating which locations in the template path are to be held fixed.
+#' @param point.check function that accepts a state and returns boolean indicating whether the state is acceptable.
+#' @param random.rotation the upper and lower limits (radians) of the rotation applied to the VAR(1) model.
+#' @param partial if `TRUE`, a partial track is returned if the sampling fails.
 #' @return An array of states the define the simulated path.
 #' @export
 surrogateAR <- function(model, xs, ts = seq_len(nrow(xs)), fixed = rep(c(TRUE, FALSE, TRUE), c(1, nrow(xs)-2, 1)), point.check = function(tm, pt) TRUE, random.rotation = c(-pi, pi), partial = FALSE) {
-
     if (is.data.frame(xs)) xs <- as.matrix(xs)
 
     xs <- unname(xs[, 1:2, drop = FALSE])
     n <- nrow(xs)
-
-    ## Construct that fit that would have been obtained had the data been
-    ## rotated with rotation matrix R.
-    rotateVAR1 <- function(model, theta) {
-        if (abs(theta) > 1e-09) {
-            nms <- names(model$x.mean)
-            R <- matrix(c(cos(theta), sin(theta), -sin(theta), cos(theta)), 2, 2)
-            model$ar[1, , ] <- R %*% model$ar[1, , ] %*% t(R)
-            model$var.pred <- R %*% model$var.pred %*% t(R)
-            model$x.mean <- model$x.mean %*% t(R)
-            names(model$x.mean) <- nms
-        }
-        model
-    }
 
     ## Simulate forward from k0.  Returns the index of the last fixed point reached if an acceptable next candidate cannot be found.
     sample <- function(k0, A, U, mu) {
@@ -232,9 +208,6 @@ surrogateAR <- function(model, xs, ts = seq_len(nrow(xs)), fixed = rep(c(TRUE, F
         list(xs = xs, ts = ts)
     }
 }
-
-
-
 
 #' Generate Transition and Covariance Matrices for a simple Crawl Model
 #'
@@ -316,8 +289,7 @@ surrogateCrawlModel <- function(fit, dt) {
 #' corresponding to the fitted movement model.
 #' @param xs the template sequence of states
 #' @param ts the times at which the track is sampled
-#' @param fixed a logical vector indicating which locations in the
-#' template path are to be held fixed.
+#' @param fixed a logical vector indicating which locations in the template path are to be held fixed.
 #' @param point.check function that accepts a state and returns `TRUE` or `FALSE` indicating whether the state is acceptable.
 #' @param Verr error covariance for fixed points.
 #' @param partial if `TRUE`, a partial track is returned if the
