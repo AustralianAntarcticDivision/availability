@@ -11,4 +11,5 @@
 #' @importFrom sf sf_project st_as_sf st_coordinates st_crs `st_crs<-` st_is_longlat st_transform
 #' @importFrom stats ar approxfun qnorm rnorm runif
 #' @importFrom tmvtnorm rtmvnorm
+#' @importFrom units convert_to_base deparse_unit
 "_PACKAGE"

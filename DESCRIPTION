@@ -22,6 +22,7 @@ Imports:
     raster,
     sf,
     testthat,
+    units,
     png
 Suggests:
     knitr,
