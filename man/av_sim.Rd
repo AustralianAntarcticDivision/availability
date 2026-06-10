@@ -4,23 +4,33 @@
 \alias{av_sim}
 \title{Simulate a track}
 \usage{
-av_sim(fit, x, fixed, point_check, partial = FALSE, random_rotation)
+av_sim(
+  fit,
+  x,
+  fixed,
+  point_check,
+  partial = FALSE,
+  random_rotation,
+  force = FALSE
+)
 }
 \arguments{
 \item{fit}{av_fit: an object of class \code{av_fit}, as returned by e.g. \code{\link[=av_fit_ar]{av_fit_ar()}}}
 
-\item{x}{: a data.frame containing a "template" track. It can optionally be an \code{sf} tibble (i.e. in projected coordinates). If not projected, it must contain columns named "lon" and "lat". In all cases it must contain a "date" column with timestamps in POSIX format. This template is used to specify the projection and length of the simulated track, the location of fixed points (see \code{fixed}), and the time difference between successive points on the track}
+\item{x}{: a data.frame containing a "template" track. It can optionally be an \code{sf}-tibble (i.e. in projected coordinates). If not projected, it must contain columns named "lon" and "lat". In all cases it must contain a "date" column with timestamps in POSIX format. This template is used to specify the projection and length of the simulated track, the location of fixed points (see \code{fixed}), and the time difference between successive points on the track}
 
 \item{fixed}{logical: a vector (with length equal to the number of rows in \code{x}) indicating which locations in the template path are to be held fixed. By default the first and last points are fixed}
 
-\item{point_check}{function: a function that accepts a parameters \code{tm} (date) and \code{pt} (location) and returns \code{TRUE} or \code{FALSE} indicating whether the location is acceptable. By default all points are accepted}
+\item{point_check}{function: a function that accepts a parameters \code{tm} (date) and \code{pt} (location) and returns \code{TRUE} or \code{FALSE} indicating whether the location is acceptable. By default all points are accepted. The \code{pt} parameter passed to the \code{point_check} function will be in the same projection as \code{x} (or will be longitude and latitude if \code{x} is not projected)}
 
 \item{partial}{logical: if \code{TRUE}, a partial track is returned if the sampling fails}
 
 \item{random_rotation}{numeric: for the VAR-based method only. A two-element vector giving the upper and lower limits (radians) of the rotation applied to the model}
+
+\item{force}{logical: if \code{TRUE}, force the simulation to go ahead even if internal checks fail}
 }
 \value{
-If \code{fit} was constructed with projected coordinates, an sf-tibble in the same projection with column \code{date}. Otherwise for unprojected (longitude-latitude) data, a data.frame with columns \code{lon}, \code{lat}, and \code{date}
+If \code{x} was an \code{sf}-tibble in projected coordinates, the returned value will also be an \code{sf}-tibble in the same projection with column \code{date}. Otherwise for unprojected (longitude-latitude) data, the returned value will be a data.frame with columns \code{lon}, \code{lat}, and \code{date}
 }
 \description{
 Simulate a track

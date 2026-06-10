@@ -7,7 +7,7 @@
 av_fit_ar(x, ...)
 }
 \arguments{
-\item{x}{: a data.frame containing the observed track. It can optionally be an \code{sf} tibble (i.e. in projected coordinates). If not projected, it must contain columns named "lon" and "lat". In all cases it must contain a "date" column with timestamps in POSIX format}
+\item{x}{: a data.frame containing the observed track. It can optionally be an \code{sf}-tibble (i.e. in projected coordinates). If not projected, it must contain columns named "lon" and "lat". In both cases it must contain a "date" column with timestamps in POSIX format}
 
 \item{...}{: additional arguments, currently not documented}
 }
