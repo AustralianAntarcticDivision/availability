@@ -50,8 +50,8 @@ av_fit_ar <- function(x, ...) {
         if (identical(dots$transform, TRUE)) {
             ## use ecdf-quantile method to normalize x-speeds and y-speeds
             dots$transform <- list(
-                structure(list(transform = approxfun(sx, ecdfq(sx), rule = 2), inverse = approxfun(ecdfq(sx), sx), rule = 2), class = "transform"),
-                structure(list(transform = approxfun(sy, ecdfq(sy), rule = 2), inverse = approxfun(ecdfq(sy), sy), rule = 2), class = "transform")
+                structure(list(transform = approxfun(sx, ecdfq(sx), rule = 2), inverse = approxfun(ecdfq(sx), sx, rule = 2)), class = "transform"),
+                structure(list(transform = approxfun(sy, ecdfq(sy), rule = 2), inverse = approxfun(ecdfq(sy), sy, rule = 2)), class = "transform")
             )
         }
         dxdy <- apply_transform(sx, sy, transform = dots$transform)
@@ -92,7 +92,8 @@ av_sim <- function(fit, x, fixed, point_check, partial = FALSE, random_rotation,
 
     ## if our fit was made on projected coordinates, test that those coordinates are E/N aligned
     fit_alignment_check <- NA
-    if (!is.null(fit$projection)) {
+    fit_proj <- if (inherits(fit, "ssm_df")) st_crs(aniMotum::grab(fit, what = "predicted", as_sf = TRUE)) else fit$projection
+    if (!is.null(fit_proj)) {
         temp <- if (inherits(fit, "ssm_df")) aniMotum::grab(fit, what = "predicted", as_sf = TRUE) else fit$data
         fit_alignment_check <- st_is_longlat(temp) || check_proj_is_lonlat_aligned(temp)
     }
@@ -104,19 +105,19 @@ av_sim <- function(fit, x, fixed, point_check, partial = FALSE, random_rotation,
     }
 
     ## check simulation on long-lat from a projected fit
-    if (!is.null(fit$projection) && (!inherits(x, "sf") || st_is_longlat(x))) {
+    if (!is.null(fit_proj) && (!inherits(x, "sf") || st_is_longlat(x))) {
         if (!isTRUE(force) && !fit_alignment_check) stop("the simulation is to be done in longitude-latitude coordinates, but the model was fitted to projected coordinates that are not cardinal and rectilinear. If you are confident that this is OK, you can force the simulation to run with `av_sim(..., force = TRUE)`")
     }
 
     ## check simulation on projected coords from a projected fit (do the projections match?)
-    if (inherits(x, "sf") && !st_is_longlat(x) && !is.null(fit$projection) && !isTRUE(st_crs(x) == fit$projection)) {
+    if (inherits(x, "sf") && !st_is_longlat(x) && !is.null(fit_proj) && !isTRUE(st_crs(x) == fit_proj)) {
         if (!isTRUE(force)) {
             stop("the projections of `fit` and `x` are different. If you are confident that this is OK, you can force the simulation to run with `av_sim(..., force = TRUE)`")
         }
     }
 
     ## check simulation on projected coordinates from a fit made on long-lat data
-    if (is.null(fit$projection) && inherits(x, "sf") && !st_is_longlat(x)) {
+    if (is.null(fit_proj) && inherits(x, "sf") && !st_is_longlat(x)) {
         if (!isTRUE(force) && !sim_alignment_check) stop("the model was fitted to longitude-latitude coordinates, but the simulation is to be done on projected coordinates that are not cardinal and rectilinear. If you are confident that this is OK, you can force the simulation to run with `av_sim(..., force = TRUE)`")
     }
 
@@ -286,8 +287,9 @@ av_sim_core <- function(fit, x, fixed, point_check, random_rotation, partial, al
                     ## TODO handle dateline if we are simulating in projected coords
                     if (length(kfixed)) {
                         this_nudge <- xs[kfixed[1], ] - x1
-                        this_nudge[1] <- angle_normalise(this_nudge[1] / 180 * pi) / pi * 180
+                        if (is.null(fit$projection)) this_nudge[1] <- angle_normalise(this_nudge[1] / 180 * pi) / pi * 180
                         x1 <- x1 + (this_nudge) / (kfixed[1] - k + 1L)
+                        if (is.null(fit$projection)) x1[1] <- angle_normalise(x1[1] / 180 * pi) / pi * 180
                     }
                     ## test current candidate
                     if (point_check(ts[k], x1)) {
@@ -298,7 +300,7 @@ av_sim_core <- function(fit, x, fixed, point_check, random_rotation, partial, al
                             went_from <- if (is.null(proj)) pos else xy2ll(pos)
                             went_to <- if (is.null(proj)) x1 else xy2ll(x1)
                             ## those are the start and end locations of this step, either the longlat point, or transformed from xy to ll if we are simulating on projected coords
-                            if (changed_ns(went_from, went_to)) {
+                            if (isTRUE(changed_ns(went_from, went_to))) {
                                 ## cat("changed N/S from:", went_from, "to", went_to, "with v:", if (fit$method == "var1") z1 else v[k, ], "\n")
                                 if (fit$method == "var1") {
                                     z1 <- (z1 + parms$mu) * c(1, -1) - parms$mu

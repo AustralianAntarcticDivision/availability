@@ -16,12 +16,14 @@ rotateVAR1 <- function(model, theta) {
 ## detect if we've changed from a southerly to northerly (or vice-versa) heading, along a geodesic path
 ## p0, p1 are long-lat locations
 changed_ns <- function(p0, p1) {
-    ## calculate the direction of departure and arrival for a geodesic path between p0 and p1
-    chk <- geosphere::geodesic_inverse(p0, p1)
-    ## if the sign of the northerly component of a1 differs from a2, then we started off heading south and ended up heading north (or vice-versa)
-    chk <- cos(chk[2:3] / 180 * pi)
-    ## note that for almost-easterly or almost-westerly paths, a great circle will switch from slightly northwards to slightly southwards or vice-versa. Does this matter? Consider increasing the abs(chk) threshold?
-    all(abs(chk) > 1e-08) && sign(chk[1]) != sign(chk[2])
+    tryCatch({
+        ## calculate the direction of departure and arrival for a geodesic path between p0 and p1
+        chk <- geosphere::geodesic_inverse(p0, p1)
+        ## if the sign of the northerly component of a1 differs from a2, then we started off heading south and ended up heading north (or vice-versa)
+        chk <- cos(chk[2:3] / 180 * pi)
+        ## note that for almost-easterly or almost-westerly paths, a great circle will switch from slightly northwards to slightly southwards or vice-versa. Does this matter? Consider increasing the abs(chk) threshold?
+        all(abs(chk) > 1e-08) && sign(chk[1]) != sign(chk[2])
+    }, error = function(e) FALSE)
 }
 
 ## helper function to apply a simulation model's transform function (or its inverse), which is used to make the velocity data more normal before fitting the model
