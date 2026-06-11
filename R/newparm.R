@@ -84,7 +84,6 @@ av_fit_ar <- function(x, ...) {
 #' @export
 av_sim <- function(fit, x, fixed, point_check, partial = FALSE, random_rotation, force = FALSE) {
     stopifnot("`fit` should be an object of class \"av_fit\" as returned by e.g. `av_fit_ar()`, or an `ssm_df` object as returned by `aniMotum::fit_ssm()`" = inherits(fit, "av_fit") || inherits(fit, "ssm_df"))
-    if (missing(point_check)) point_check <- function(...) TRUE
 
     ## fit can be:
     ## - an ssm_df object, in which case it has been fitted to projected data, or
@@ -100,8 +99,24 @@ av_sim <- function(fit, x, fixed, point_check, partial = FALSE, random_rotation,
 
     ## if we are simulating on projected coordinates, test that those coordinates are E/N aligned
     sim_alignment_check <- NA
+    sim_proj <- NULL
     if (inherits(x, "sf")) {
+        if (!st_is_longlat(x)) sim_proj <- st_crs(x)
         sim_alignment_check <- st_is_longlat(x) || check_proj_is_lonlat_aligned(x)
+    }
+
+    if (missing(point_check)) {
+        if (is.null(sim_proj)) {
+            point_check <- function(...) TRUE
+        } else {
+            ## we are simulating in projected coordinates, so at a minimum we need to check that a candidate point in projected space is actually a valid point in the domain of that projection. If it is not, converting it to long-lat will fail
+            point_check <- function(tm, pt) {
+                tryCatch({
+                    sf_project(from = sim_proj, to = "EPSG:4326", matrix(pt, ncol = 2))
+                    TRUE
+                }, error = function(e) FALSE)
+            }
+        }
     }
 
     ## check simulation on long-lat from a projected fit
@@ -285,7 +300,7 @@ av_sim_core <- function(fit, x, fixed, point_check, random_rotation, partial, al
                     }
                     ## if we have a fixed point coming up, nudge towards it
                     ## TODO handle dateline if we are simulating in projected coords
-                    if (length(kfixed)) {
+                    if (length(kfixed) > 0) {
                         this_nudge <- xs[kfixed[1], ] - x1
                         if (is.null(fit$projection)) this_nudge[1] <- angle_normalise(this_nudge[1] / 180 * pi) / pi * 180
                         x1 <- x1 + (this_nudge) / (kfixed[1] - k + 1L)
