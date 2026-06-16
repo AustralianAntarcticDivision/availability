@@ -5,39 +5,30 @@
 \title{Land Mask}
 \usage{
 etopoMask(
-  basename = "ETOPO1_Bed_c_geotiff",
+  basename = "ETOPO_2022_v1_30s_N90W180_surface",
   path = ".",
-  tmp = path,
+  tif_path,
   land = FALSE
 )
 }
 \arguments{
-\item{basename}{the name of the etopo geotiff (without file extension)}
+\item{basename}{the name of the ETOPO geotiff (without file extension)}
 
-\item{path}{the path to a folder containing the etopo geotiff}
+\item{path}{the path to a folder containing the ETOPO geotiff}
 
-\item{tmp}{the path to a writeable folder}
+\item{tif_path}{string: as an alternative to \code{basename} and \code{path}, provide the full path to the ETOPO geotiff (including file extension) in \code{tif_path}}
 
 \item{land}{the logical value to return for land}
 }
 \value{
-a logical indicating whether the point is land or sea
+A function that takes parameters \code{tm} and \code{pt} (locaton in longitude and latitude) and returns a logical value indicating whether the point is land or sea
 }
 \description{
-A land mask based on the full ETOPO1 dataset
+A land mask based on the ETOPO bathymetric dataset
 }
 \details{
-Generate a land mask function based on ETOPO1 topography. The
-etopo geotiff is not bundled with the package and must be
-downloaded from
-\url{https://www.ngdc.noaa.gov/mgg/global/global.html}.
+Generate a land mask function based on ETOPO topography. The ETOPO geotiff is not bundled with the package and must be
+downloaded from \url{https://www.ncei.noaa.gov/products/etopo-global-relief-model}. You are free to choose the resolution appropriate to your usage (ETOPO 2022 is provided at 15-, 30-, and 60-arcsecond resolution). If you are working in the Southern Ocean you are advised to use the "Ice surface elevation geotiff" product rather than the bedrock elevation.
 
-When the mask is intially created, a native raster (grd, gri)
-version of the geotiff is created in the directory \code{tmp},
-which must be writable. This file can be deleted when the
-computation is finished.
-
-The \code{land} argument determines whether the mask function
-returns \code{TRUE} or \code{FALSE} for land. The mask is constant
-and the \code{tm} argument to the mask is ignored.
+The \code{land} argument determines whether the mask function returns \code{TRUE} or \code{FALSE} for land. The mask is constant and the \code{tm} argument to the mask is ignored.
 }

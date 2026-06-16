@@ -17,7 +17,7 @@ landmask_init(res = 0.1, latmin = -90, latmax = 90)
 \item{latmax}{numeric: northernmost latitude extent of the land mask}
 }
 \value{
-function that returns a logical indicating whether the point is at sea (TRUE) or on land (FALSE)
+A function that returns a logical indicating whether the point is at sea (\code{TRUE}) or on land (\code{FALSE})
 }
 \description{
 Generate a land mask function based on the Global Self-consistent, Hierarchical, High-resolution Geography Database.

@@ -19,8 +19,8 @@ Imports:
     geosphere,
     mvtnorm,
     tmvtnorm,
-    raster,
     sf,
+    terra,
     testthat,
     units,
     png
