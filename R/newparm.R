@@ -107,7 +107,7 @@ av_sim <- function(fit, x, fixed, point_check, partial = FALSE, random_rotation,
 
     if (missing(point_check)) {
         if (is.null(sim_proj)) {
-            point_check <- function(...) TRUE
+            point_check <- function(tm, pt) TRUE
         } else {
             ## we are simulating in projected coordinates, so at a minimum we need to check that a candidate point in projected space is actually a valid point in the domain of that projection. If it is not, converting it to long-lat will fail
             point_check <- function(tm, pt) {
