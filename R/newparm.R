@@ -7,19 +7,37 @@
 #' @export
 av_fit_ar <- function(x, ...) {
     dots <- list(...)
+    fit_unit_scale <- 1 ## scalar to apply to units of m in fit coords. For long-lat the scalar is 1 because calculations are done in m. If projected coords are in units of km then then the unit_scale value will be 1000
+    as_ll <- FALSE
     if (inherits(x, "sf")) {
         stopifnot("x must be an sf-tibble with column 'date', or a data.frame with columns 'lon', 'lat', and 'date'" = "date" %in% names(x))
         xy <- st_coordinates(x)
-        proj <- st_crs(x)
-        ## distance increments dx, dy for each time step
-        ## TODO deal with dateline wrapping, pole crossing
-        dx <- diff(xy[, 1])
-        dy <- diff(xy[, 2])
+        if (!st_is_longlat(x)) {
+            proj <- st_crs(x)
+            ## distance increments dx, dy for each time step
+            ## TODO deal with dateline wrapping, pole crossing
+            dx <- diff(xy[, 1])
+            dy <- diff(xy[, 2])
+            ## max observed speed in the template track
+            vmax <- max(sqrt(rowSums(diff(xy)^2)) / as.numeric(diff(x$date, units = "secs")), na.rm = TRUE) ## projectionunits / sec
+            ## make vmax m/s
+            crd_units <- convert_to_base(proj$ud_unit)
+            if (isTRUE(deparse_unit(crd_units) == "m")) {
+                fit_unit_scale <- as.numeric(crd_units)
+                vmax <- vmax * fit_unit_scale
+            } else {
+                warning("the coordinate system of `fit` has an unexpected base unit ('", deparse_unit(crd_units), "'), check the scale of the simulated track")
+            }
+        } else {
+            as_ll <- TRUE
+        }
     } else if (is.data.frame(x)) {
         stopifnot("x must be an sf-tibble with column 'date', or a data.frame with columns 'lon', 'lat', and 'date'" = all(c("lon", "lat", "date") %in% names(x)))
+        as_ll <- TRUE
         xy <- x[, c("lon", "lat")]
-        proj <- NULL##st_crs("EPSG:4326")
-
+    }
+    if (as_ll) {
+        proj <- NULL
         ## distance increments dx, dy for each time step
         nr <- nrow(xy)
         dx <- distVincentyEllipsoid(cbind(xy$lon[-1], xy$lat[-nr]), xy[-nr, ]) * sign(xy$lon[-1] - xy$lon[-nr])
@@ -36,6 +54,8 @@ av_fit_ar <- function(x, ...) {
         dy <- distVincentyEllipsoid(cbind(xy$lon[-nr], xy$lat[-1]), xy[-nr, ]) * sign(xy$lat[-1] - xy$lat[-nr])
         ## northwards movement has positive sign
 
+        ## max observed speed in the template track
+        vmax <- max(distVincentyEllipsoid(xy) / as.numeric(diff(x$date, units = "secs")), na.rm = TRUE) ## m/s
     } else {
         stop("x must be an sf-tibble with column 'date', or a data.frame with columns 'lon', 'lat', and 'date'")
     }
@@ -63,8 +83,9 @@ av_fit_ar <- function(x, ...) {
         method = "var1",
         model = ar(dxdy, order.max = 1L, aic = FALSE),
         projection = proj,
-        transform = dots$transform), ## will be NULL if not set
+        transform = dots$transform, ## will be NULL if not set
         data = x,
+        observed_vmax = vmax),
         class = "av_fit")
 }
 
@@ -88,6 +109,10 @@ av_sim <- function(fit, x, fixed, point_check, partial = FALSE, random_rotation,
     ## fit can be:
     ## - an ssm_df object, in which case it has been fitted to projected data, or
     ## - an av_fit object e.g. VAR model, which could have been fitted to long-lat or projected coords
+
+    if (missing(x) && inherits(fit, "ssm_df")) {
+        x <- aniMotum::grab(fit, what = "predicted", as_sf = TRUE)
+    }
 
     ## if our fit was made on projected coordinates, test that those coordinates are E/N aligned
     fit_alignment_check <- NA
@@ -262,22 +287,30 @@ av_sim_core <- function(fit, x, fixed, point_check, random_rotation, partial, al
                 ## Try at most 100 new candidates
                 for (r in 1:100) {
                     step <- rep(NA_real_, 2)
-                    if (fit$method == "var1") {
-                        ## Trial z - simulate from centred VAR(1) model
-                        z1 <- drop(parms$A %*% z) + drop(rnorm(2) %*% parms$U)
-                        thisv <- z1 + parms$mu
-                    } else if (fit$method == "aniMotum") {
-                        if (parms$am_model == "crw") {
-                            ## following https://github.com/ianjonsen/aniMotum/blob/cae6bb0c69669fc8c427362d9308facde0bb4ac0/R/sim_fit.R#L217
-                            ## note: vmin, vmax, and sigma are km/h. Our v is also km/h, but dt is secs not hours
-                            thisv <- rtmvnorm(1, v[k - 1, ], sigma = parms$Sigma * dt[k] / 3600, lower = parms$vmin, upper = parms$vmax)
+                    for (tries in 1:50) { ## rejection-sample velocities until we get one that meets the vmax restriction
+                        if (fit$method == "var1") {
+                            ## Trial z - simulate from centred VAR(1) model
+                            z1 <- drop(parms$A %*% z) + drop(rnorm(2) %*% parms$U)
+                            thisv <- z1 + parms$mu
+                            ## thisv is in m/s for model fitted to long-lat data, or projectionunits / s for projected data. parms$vmax is in m/s
+                            vchk <- thisv * fit_unit_scale ## always m/s
+                        } else if (fit$method == "aniMotum") {
+                            if (parms$am_model == "crw") {
+                                ## following https://github.com/ianjonsen/aniMotum/blob/cae6bb0c69669fc8c427362d9308facde0bb4ac0/R/sim_fit.R#L217
+                                ## note: vmax and sigma are km/h. Our v is also km/h, but dt is secs not hours
+                                ## thisv <- rtmvnorm(1, v[k - 1, ], sigma = parms$Sigma * dt[k] / 3600, lower = parms$vmin, upper = parms$vmax)
+                                ## don't use per-axis velocity limits, apply an overall maximum limit instead
+                                vchk <- thisv <- rmvnorm(1, v[k - 1, ], sigma = parms$Sigma * dt[k] / 3600)
+                            } else {
+                                stop("aniMotum rw models are not supported yet")
+                                ## rw, see https://github.com/ianjonsen/aniMotum/blob/cae6bb0c69669fc8c427362d9308facde0bb4ac0/R/sim_fit.R#L268
+                            }
                         } else {
-                            stop("aniMotum rw models are not supported yet")
-                            ## rw, see https://github.com/ianjonsen/aniMotum/blob/cae6bb0c69669fc8c427362d9308facde0bb4ac0/R/sim_fit.R#L268
+                            stop("method not coded")
                         }
-                    } else {
-                        stop("method not coded")
+                        if (sqrt(sum(thisv^2)) <= parms$vmax) break
                     }
+                    if (tries == 50) next
                     if (!is.null(fit$transform)) {
                         ## v needs to be transformed (and saved for next iter), because the model was fitted on transformed v's
                         thisv <- apply_transform(thisv[1], thisv[2], transform = fit$transform, inverse = TRUE, df = FALSE)
@@ -306,8 +339,12 @@ av_sim_core <- function(fit, x, fixed, point_check, random_rotation, partial, al
                         x1 <- x1 + (this_nudge) / (kfixed[1] - k + 1L)
                         if (is.null(fit$projection)) x1[1] <- angle_normalise(x1[1] / 180 * pi) / pi * 180
                     }
-                    ## test current candidate
-                    if (point_check(ts[k], x1)) {
+                    ## test current candidate, including an extra check on step speed which may have changed if we nudged the endpoint towards a fixed point
+
+                    ## check the actual speed, after nudging
+                    actual_step_speed <- (if (is.null(fit$projection)) { distVincentyEllipsoid(x1, pos) } else { sqrt(sum((x1 - pos)^2)) * fit_unit_scale }) / dt[k] ## always m/s
+                    if (fit$method == "aniMotum") actual_step_speed <- actual_step_speed * 3.6 ## for aniMotum, parms$vmax is km/h
+                    if (point_check(ts[k], x1) && actual_step_speed <= parms$vmax) {
                         ## Accept candidate
                         ## did we change from southerly to northerly heading (e.g. crossed the pole)? If we did, and if the velocity is parameterized as easterly/northerly components, then we need to reverse the sign of the northerly component for the next simulation step
                         ## we can only do this if the model was fitted to long-lat (unprojected) data, or its projection had easterly/northerly alignment
@@ -357,7 +394,7 @@ av_sim_core <- function(fit, x, fixed, point_check, random_rotation, partial, al
         if (fit$method == "var1") {
             theta <- if (is.null(random_rotation)) 0 else runif(1, random_rotation[1], random_rotation[2])
             model0 <- rotateVAR1(fit$model, theta)
-            parms <- list(A = unname(model0$ar[1, , ]), U = chol(unname(model0$var.pred)), mu = as.vector(model0$x.mean))
+            parms <- list(A = unname(model0$ar[1, , ]), U = chol(unname(model0$var.pred)), mu = as.vector(model0$x.mean), vmax = fit$observed_vmax)
             v <- matrix(NA_real_, nrow = n, ncol = 2) ## velocities, km/h
         } else if (fit$method == "aniMotum") {
             parms <- list(am_model = fit$model$ssm[[1]]$pm) ## aniMotum model type as a string, "crw", "rw", etc
@@ -366,8 +403,7 @@ av_sim_core <- function(fit, x, fixed, point_check, random_rotation, partial, al
                 Sigma[1, 2] <- Sigma[2, 1] <- fit$model$ssm[[1]]$par["rho_p", 1] * sqrt(Sigma[1, 1]) * sqrt(Sigma[2, 2])
                 parms$Sigma <- Sigma
                 uv <- aniMotum::grab(fit$model, what = "predicted")[, c("u", "v")]
-                parms$vmin <- c(min(uv$u, na.rm = TRUE), min(uv$v, na.rm = TRUE)) ## km/h
-                parms$vmax <- c(max(uv$u, na.rm = TRUE), max(uv$v, na.rm = TRUE)) ## km/h
+                parms$vmax <- max(sqrt(rowSums(uv^2)), na.rm = TRUE)
                 v <- matrix(NA_real_, nrow = n, ncol = 2) ## velocities, km/h
                 v[1, ] <- as.numeric(uv[1, ])
                 if (any(is.na(v[1, ]))) v[1, ] <- c(0, 0) ## fallback
@@ -376,8 +412,7 @@ av_sim_core <- function(fit, x, fixed, point_check, random_rotation, partial, al
                 Sigma[!Sigma] <- prod(Sigma[1, 1]^0.5, Sigma[2, 2]^0.5) * fit$model$ssm[[1]]$par["rho_p", 1]
                 parms$Sigma <- Sigma
                 xy <- aniMotum::grab(fit$model, what = "predicted")[, c("x", "y")]
-                parms$vmin <- c(min(diff(xy$x), na.rm = TRUE), min(diff(xy$y), na.rm = TRUE))
-                parms$vmax <- c(max(diff(xy$x), na.rm = TRUE), max(diff(xy$y), na.rm = TRUE))
+                parms$vmax <- max(sqrt(diff(xy$x)^2 + diff(xy$y)^2), na.rm = TRUE)
             } else {
                 stop("unsupported aniMotum model type, must be 'crw' or 'rw'")
             }
